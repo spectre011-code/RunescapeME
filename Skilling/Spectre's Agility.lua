@@ -17,7 +17,7 @@ local courseDescriptions = {
     [3] = "50-52 Southern Anachronia Agility Course", -- Starting location https://imgur.com/a/giFrpEL
     [4] = "52-65 Wilderness Agility Course", -- Starting location https://imgur.com/a/43kKbVV
     [5] = "65-77 Het's Oasis Agility Course", -- Starting location https://imgur.com/a/hf1tboY
-    [6] = "77-85 Hefin Agility Course", -- Starting location https://imgur.com/a/17zAd9a
+    [6] = "77-85 Hefin Agility Course", -- Starting location https://imgur.com/XuwjyLj
     [7] = "85-99+ Advanced Anachronia Agility Course" -- Starting location https://imgur.com/a/qfrsup3
 }
 
