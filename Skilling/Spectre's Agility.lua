@@ -2,13 +2,20 @@
 
 Spectre's Agility
 Author: Spectre
-Version 1.0
+Version 1.1
 Date: 06-09-2024
 Discord: spectre011.code_34000
 
+Changelog:
+v1.0 - 06-09-2024
+    - Initial release.
+v1.1 - 07-09-2024
+    - Included support to silverhawk boots
+    - Fixed an issue where teleporting from the Wildy course would make so that the script can't stop
+
 Move to the starting location of the circuit and set the courseID to the method you want to use acording to the courseDescriptions table ]]
 
-local courseID = 1 --CHANGE THIS #########################################################################################
+local courseID = 4 --CHANGE THIS #########################################################################################
 
 ----------------------------------------------------------------------------------------------------------------------------
 local courseDescriptions = {
@@ -17,8 +24,8 @@ local courseDescriptions = {
     [3] = "50-52 Southern Anachronia Agility Course", -- Starting location https://imgur.com/a/giFrpEL
     [4] = "52-65 Wilderness Agility Course", -- Starting location https://imgur.com/a/43kKbVV
     [5] = "65-77 Het's Oasis Agility Course", -- Starting location https://imgur.com/a/hf1tboY
-    [6] = "77-85 Hefin Agility Course", -- Starting location https://imgur.com/a/2ihsVtO
-    [7] = "85-99+ Advanced Anachronia Agility Course" -- Starting location https://imgur.com/a/6jO8r4l
+    [6] = "77-80 Hefin Agility Course", -- Starting location https://imgur.com/a/17zAd9a
+    [7] = "80-99+ Advanced Anachronia Agility Course" -- Starting location https://imgur.com/a/qfrsup3
 }
 
 local API = require("api")
@@ -40,6 +47,23 @@ local function crossObstacle(id, destX, destY)
         UTILS.randomSleep(500)
     end
     UTILS.randomSleep(1000)
+end
+
+local function RechargeSilverhawkBoots(minQuantity)
+    local item = API.Container_Get_s(94,30924)
+    if item.item_id == 30924 then
+        if item.Extra_ints[2] < minQuantity then
+            local silverhawkFeather = API.CheckInvStuff0(30915)
+            local silverhawkDown = API.CheckInvStuff0(34823)
+            if silverhawkFeather ~= false then
+                API.DoAction_Inventory1(30915,0,1,API.OFF_ACT_GeneralInterface_route)
+                return
+            elseif silverhawkDown ~= false then
+                API.DoAction_Inventory1(34823,0,1,API.OFF_ACT_GeneralInterface_route)
+                return
+            end
+        end
+    end
 end
 
 local currentStageDescription = courseDescriptions[courseID]
@@ -235,7 +259,7 @@ local stageFunctions = {
                     while API.Read_LoopyLoop() and not isPlayerAtCoords(3005, 3962) do
                         UTILS.randomSleep(10000)
                     end                    
-                    while fellIntoTheHole do
+                    while API.Read_LoopyLoop() and fellIntoTheHole do
                         API.DoAction_Object1(0xb5, API.OFF_ACT_GeneralObject_route0, {obstacles[4].id}, 50)
                         while API.Read_LoopyLoop() and not isPlayerAtCoords(obstacles[4].finalCoords[1], obstacles[4].finalCoords[2]) and API.ReadPlayerAnim() ~= "-1" do
                             if API.PInArea21(2900, 3100, 10250, 10450) then
@@ -668,7 +692,7 @@ local stageFunctions = {
             API.DoAction_Tile(WPOINT.new(5418 + math.random(-1, 1), 2355 + math.random(-1, 1), 0))
             UTILS.randomSleep(7000)
             API.DoAction_Tile(WPOINT.new(5417, 2325, 0))
-            while not isPlayerAtCoords(5417, 2325) do
+            while API.Read_LoopyLoop() and not isPlayerAtCoords(5417, 2325) do
                 UTILS.randomSleep(500)
             end
             ----------------------------------------------------------------------------------------
@@ -688,6 +712,6 @@ end
 API.Write_LoopyLoop(true)
 while (API.Read_LoopyLoop()) do
     UTILS:antiIdle()
+    RechargeSilverhawkBoots(100)
     executeStage(courseID)
 end
-
