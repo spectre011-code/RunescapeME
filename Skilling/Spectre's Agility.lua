@@ -2,7 +2,7 @@
 
 Spectre's Agility
 Author: Spectre
-Version 1.1
+Version 1.2
 Date: 06-09-2024
 Discord: spectre011.code_34000
 
@@ -11,7 +11,12 @@ v1.0 - 06-09-2024
     - Initial release.
 v1.1 - 07-09-2024
     - Included support to silverhawk boots
-    - Fixed an issue where teleporting from the Wildy course would make so that the script can't stop
+    - Fixed an issue where teleporting from the Wilderness course would make so that the script can't stop
+v1.2 - 12-09-2024
+    - Fixed an issue where the character would get stuck on one side of the bridge in Circuit 1 (Nature Grotto)
+    - Fixed an issue where the character would get stuck on one side of the rope swing in Circuit 4 (Wilderness)
+    - Character will now eat food if HP is low before starting Circuit 4 (Wilderness)
+    - Character will now load the last preset if the inventory is full after completing Circuit 6 (Hefin)
 
 Move to the starting location of the circuit and set the courseID to the method you want to use acording to the courseDescriptions table ]]
 
@@ -42,9 +47,16 @@ end
 
 local function crossObstacle(id, destX, destY)
     print("ID: ", id)
-    API.DoAction_Object1(0xb5,API.OFF_ACT_GeneralObject_route0,{id},50)
-    while API.Read_LoopyLoop() and not isPlayerAtCoords(destX, destY) and API.ReadPlayerAnim() ~= "-1" and API.ReadPlayerAnim() ~= "0" do
+    API.DoAction_Object1(0xb5, API.OFF_ACT_GeneralObject_route0, {id}, 50)    
+    local maxRetries = 20
+    local retries = 0
+    while API.Read_LoopyLoop() and not isPlayerAtCoords(destX, destY) and 
+          API.ReadPlayerAnim() ~= "-1" and API.ReadPlayerAnim() ~= "0" and retries < maxRetries do
         UTILS.randomSleep(500)
+        retries = retries + 1
+    end
+    if retries >= maxRetries then
+        print("Timeout. Passing through.")
     end
     UTILS.randomSleep(1000)
 end
@@ -216,6 +228,30 @@ local stageFunctions = {
             {id = 64698, obstacleCoords = {3001, 3945}, finalCoords = {2994, 3945}}, -- log balance
             {id = 65734, obstacleCoords = {2993, 3936}, finalCoords = {2994, 3935}}, -- cliff side
         }
+        local function UseAbilityByName(string)    
+            local ability = UTILS.getSkillOnBar(string)
+            if ability ~= nil then
+                return API.DoAction_Ability_Direct(ability, 1, API.OFF_ACT_GeneralInterface_route)
+            end
+            return false
+        end
+
+        local function CheckHealth()
+            local health = API.GetHPrecent()
+            local canEat = UTILS.canUseSkill("Eat Food")
+            if health < 30 and canEat == true then
+                while health < 80 do
+                    UseAbilityByName("Eat Food")
+                    UTILS.randomSleep(1000)
+                    health = API.GetHPrecent()
+                end
+            elseif health < 30 and canEat == false then
+                print("Low HP and no food or Eat Food not found in ability bar. Exiting script.")
+                API.Write_LoopyLoop(false)
+                return
+            end
+        end
+
         if API.PInArea21(2991, 3006, 3931, 3937) then
             playerInCorrectArea = true          
         else
@@ -224,6 +260,7 @@ local stageFunctions = {
             API.Write_LoopyLoop(false)
         end
         if playerInCorrectArea then
+            CheckHealth()
             API.DoAction_Object1(0xb5,API.OFF_ACT_GeneralObject_route0,{obstacles[1].id},50)
             while API.Read_LoopyLoop() and not isPlayerAtCoords(obstacles[1].finalCoords[1], obstacles[1].finalCoords[2]) and API.ReadPlayerAnim() ~= "-1" do
                 UTILS.randomSleep(500)
@@ -231,6 +268,10 @@ local stageFunctions = {
             UTILS.randomSleep(2000)
             API.DoAction_Object1(0xb5,API.OFF_ACT_GeneralObject_route0,{obstacles[2].id},50)
             while API.Read_LoopyLoop() and not isPlayerAtCoords(obstacles[2].finalCoords[1], obstacles[2].finalCoords[2]) and API.ReadPlayerAnim() ~= "-1" do
+                UTILS.randomSleep(5000)
+                if isPlayerAtCoords(3004, 3950) then
+                    API.DoAction_Object1(0xb5,API.OFF_ACT_GeneralObject_route0,{obstacles[2].id},50)
+                end
                 if API.PInArea21(2900, 3100, 10250, 10450) then
                     UTILS.randomSleep(1000)
                     API.DoAction_Object1(0x34,API.OFF_ACT_GeneralObject_route0,{32015},50)
@@ -356,6 +397,14 @@ local stageFunctions = {
             end
             UTILS.randomSleep(1000)
         end
+        local function FullInvCheck()
+            if API.InvFull_() then
+                API.DoAction_Object1(0x33,API.OFF_ACT_GeneralObject_route3,{92692},50)
+                while API.Read_LoopyLoop() and API.InvFull_() do
+                    UTILS.randomSleep(2000)
+                end
+            end
+        end
         if API.PInArea21(2174, 2182, 3393, 3403) then
             playerInCorrectArea = true
         else
@@ -416,6 +465,7 @@ local stageFunctions = {
                     UTILS.randomSleep(1000)
                 end
             end
+            FullInvCheck()
         end        
     end,
 
