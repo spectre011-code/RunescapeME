@@ -74,6 +74,41 @@ function SpectreUtils.GetItemsInInventory()
     end
 end
 
+--Prints all objects with specified parameters
+function SpectreUtils.GetAllObjects(Id, Range, Type)
+    local objects = API.GetAllObjArray1({Id}, Range, {Type})
+    if objects and #objects > 0 then
+        for _, object in ipairs(objects) do
+            print("---------------------------------")  
+            print("object.Mem: ", object.Mem)
+            print("object.MemE: ", object.MemE)
+            print("object.TileX: ", object.TileX)
+            print("object.TileY: ", object.TileY)
+            print("object.TileZ: ", object.TileZ)
+            print("object.Id: ", object.Id)
+            print("object.Life: ", object.Life)
+            print("object.Anim: ", object.Anim)
+            print("object.Name: ", object.Name)
+            print("object.Action: ", object.Action)
+            print("object.Floor: ", object.Floor)
+            print("object.Amount: ", object.Amount)
+            print("object.Type: ", object.Type)
+            print("object.Bool1: ", object.Bool1)
+            print("object.ItemIndex: ", object.ItemIndex)
+            print("object.ViewP: ", object.ViewP)
+            print("object.ViewF: ", object.ViewF)
+            print("object.Distance: ", object.Distance)
+            print("object.Cmb_lv: ", object.Cmb_lv)
+            print("object.Unique_Id: ", object.Unique_Id)
+            print("object.CalcX: ", object.CalcX)
+            print("object.CalcY: ", object.CalcY)
+            print("object.Tile_XYZ: ", object.Tile_XYZ)
+            print("object.Pixel_XYZ: ", object.Pixel_XYZ)            
+            print("---------------------------------")          
+        end
+    end 
+end
+
 --Checks if the player is a the specified coordinates and returns true or false
 function SpectreUtils.IsPlayerAtCoords(x, y, z)
     local coord = API.PlayerCoord()
@@ -90,7 +125,7 @@ function SpectreUtils.WalkToCoordinates(x,y,z)
 end
 
 --Checks if the timer of an instance is at 00:00 and returns true or false
-function SpectreUtils.timerHitZero()
+function SpectreUtils.TimerHitZero()
     local timer = {
         InterfaceComp5.new(861, 0, -1, -1, 0),
         InterfaceComp5.new(861, 2, -1, 0, 0),
@@ -205,6 +240,58 @@ function SpectreUtils.ActivatePrayer(PrayerBuffID)
         if activationTick == 0 or currentTick > activationTick + delayTicks then
             API.DoAction_Ability(PrayerName, 1, API.OFF_ACT_GeneralInterface_route)
             activationTick = currentTick
+        end
+    end
+end
+
+--Uses incense sticks and keep them active
+function SpectreUtils.CheckIncenseStick(buffID)
+    local buffs = API.Buffbar_GetAllIDs()
+    local found = false
+    if buffs then
+        for _, object in ipairs(buffs) do
+            if object.id == buffID then
+                found = true
+                local time, level = string.match(object.text, "(%d+)%a* %((%d+)%)")
+                time = tonumber(time)
+                level = tonumber(level)
+                if level < 4 then
+                    API.DoAction_Inventory1(buffID, 0, 2, API.OFF_ACT_GeneralInterface_route) -- Overload
+                end
+                if time < 50 then
+                    local randomCount = math.random(1, 5)
+                    for i = 1, randomCount do
+                        API.DoAction_Inventory1(buffID, 0, 1, API.OFF_ACT_GeneralInterface_route) -- Extend
+                        SpectreUtils.Sleep(0.2)
+                    end
+                end
+                break
+            end
+        end
+    end    
+    if not found then
+        API.DoAction_Inventory1(buffID, 0, 2, API.OFF_ACT_GeneralInterface_route) -- Overload
+        for i = 1, 5 do
+            API.DoAction_Inventory1(buffID, 0, 1, API.OFF_ACT_GeneralInterface_route) -- Extend
+            SpectreUtils.Sleep(0.2)
+        end
+    end
+end
+
+--Recharges silverhawk boots when stored feathers are bellow minimum quantity
+function SpectreUtils.RechargeSilverhawkBoots(minQuantity)
+    local item = API.Container_Get_s(94,30924)
+    if item.item_id == 30924 then
+        if item.Extra_ints[2] < minQuantity then
+            local silverhawkFeather = API.CheckInvStuff0(30915)
+            local silverhawkDown = API.CheckInvStuff0(34823)
+            if silverhawkFeather ~= false then
+                API.DoAction_Inventory1(30915,0,1,API.OFF_ACT_GeneralInterface_route)
+                return
+            elseif silverhawkDown ~= false then
+                API.DoAction_Inventory1(34823,0,1,API.OFF_ACT_GeneralInterface_route)
+                return
+            end
         end
     end
 end
