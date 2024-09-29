@@ -2,7 +2,7 @@
 
 Spectre's Agility
 Author: Spectre
-Version 1.2
+Version 1.3
 Date: 06-09-2024
 Discord: spectre011.code_34000
 
@@ -17,12 +17,133 @@ v1.2 - 12-09-2024
     - Fixed an issue where the character would get stuck on one side of the rope swing in Circuit 4 (Wilderness)
     - Character will now eat food if HP is low before starting Circuit 4 (Wilderness)
     - Character will now load the last preset if the inventory is full after completing Circuit 6 (Hefin)
+V1.3 - 29-09-2024
+    - Added a UI to select the course, removing the need to modify the script
+    - Added a console message that links to the starting position for the courses
 
-Move to the starting location of the circuit and set the courseID to the method you want to use acording to the courseDescriptions table ]]
+Move to the starting location of the circuit, set the course and click the checkbox to start]]
 
-local courseID = 4 --CHANGE THIS #########################################################################################
+local API = require("api")
+local UTILS = require("utils")
 
-----------------------------------------------------------------------------------------------------------------------------
+local courseID = 0
+--------------------START GUI STUFF--------------------
+local UIComponents = {}
+local function GetComponentAmount()
+    local amount = 0
+    for i,v in pairs(UIComponents) do
+        amount = amount + 1
+    end
+    return amount
+end
+
+local function GetComponentByName(componentName)
+    for i,v in pairs(UIComponents) do
+        if v[1] == componentName then
+            return v;
+        end
+    end
+end
+
+local function GetComponentValue(componentName)
+    local componentArr = GetComponentByName(componentName)
+    local componentKind = componentArr[3]
+    local component = componentArr[2]
+
+    if componentKind == "Label" then
+        return component.string_value
+    elseif componentKind == "CheckBox" then
+        return component.return_click
+    elseif componentKind == "ComboBox" and component.string_value ~= "None" then
+        return component.string_value
+    elseif componentKind == "ListBox" and component.string_value ~= "None" then
+        return component.string_value
+    end
+
+    return nil
+end
+
+local function AddBackground(name, widthMultiplier, heightMultiplier, colour)
+    widthMultiplier = widthMultiplier or 1
+    heightMultiplier = heightMultiplier or 1
+    colour = colour or ImColor.new(15, 13, 18, 255)
+    Background = API.CreateIG_answer();
+    Background.box_name = "Background" .. GetComponentAmount();
+    Background.box_start = FFPOINT.new(30, 0, 0)
+    Background.box_size = FFPOINT.new(400 * widthMultiplier, 20 * heightMultiplier, 0)
+    Background.colour = colour
+    UIComponents[GetComponentAmount() + 1] = {name, Background, "Background"}
+end
+
+local function AddLabel(name, text, colour)
+    colour = colour or ImColor.new(255, 255, 255)
+    Label = API.CreateIG_answer()
+    Label.box_name = "Label" .. GetComponentAmount()
+    Label.colour = colour;
+    Label.string_value = text
+    UIComponents[GetComponentAmount() + 1] = {name, Label, "Label"}
+end
+
+local function AddComboBox(name, text, options)
+    ComboBox = API.CreateIG_answer()
+    ComboBox.box_name = text
+    ComboBox.stringsArr = options
+    ComboBox.box_size = FFPOINT.new(400, 0, 0)
+    UIComponents[GetComponentAmount() + 1] = {name, ComboBox, "ComboBox"}
+end
+
+local function AddCheckbox(name, text)
+    CheckBox = API.CreateIG_answer()
+    CheckBox.box_name = text
+    UIComponents[GetComponentAmount() + 1] = {name, CheckBox, "CheckBox"}
+end
+
+local function GUIDraw()
+    for i=1,GetComponentAmount() do
+        local componentKind = UIComponents[i][3]
+        local component = UIComponents[i][2]
+        if componentKind == "Background" then
+            component.box_size = FFPOINT.new(component.box_size.x, 25 * GetComponentAmount(), 0)
+            API.DrawSquareFilled(component)
+        elseif componentKind == "Label" then
+            component.box_start = FFPOINT.new(40, 10 + ((i - 2) * 25), 0)
+            API.DrawTextAt(component)
+        elseif componentKind == "CheckBox" then
+            component.box_start = FFPOINT.new(40, ((i - 2) * 25), 0)
+            API.DrawCheckbox(component)
+        elseif componentKind == "ComboBox" then
+            component.box_start = FFPOINT.new(40, ((i - 2) * 25), 0)
+            API.DrawComboBox(component, false)
+        elseif componentKind == "ListBox" then
+            component.box_start = FFPOINT.new(40, 10 + ((i - 2) * 25), 0)
+            API.DrawListBox(component, false)
+        end
+    end
+end
+
+local function CreateGUI()
+    AddBackground("Background", 0.85, 1, ImColor.new(15, 13, 18, 255))
+    AddLabel("Author/Version", "AIO Agility by Spectre011 - V1.3", ImColor.new(165, 0, 0))
+    AddLabel("CourseSelect", "Select a course:", ImColor.new(255, 255, 255))
+    local options = {"1-30 Nature Grotto's bridge", "30-50 Northern Anachronia", "50-52 Southern Anachronia", "52-65 Wilderness","65-77 Het's Oasis", "77-85 Hefin", "85-99+ Advanced Anachronia"}
+    AddComboBox("CourseToRun", " ", options)
+    AddCheckbox("StartStopCheckbox", "Start/Finish lap and stop")
+end
+
+local function SetCourse()
+    selectedOption = GetComponentValue("CourseToRun") or selectedOption
+    if selectedOption == "1-30 Nature Grotto's bridge" then courseID = 1 end
+    if selectedOption == "30-50 Northern Anachronia" then courseID = 2 end
+    if selectedOption == "50-52 Southern Anachronia" then courseID = 3 end
+    if selectedOption == "52-65 Wilderness" then courseID = 4 end
+    if selectedOption == "65-77 Het's Oasis" then courseID = 5 end
+    if selectedOption == "77-85 Hefin" then courseID = 6 end
+    if selectedOption == "85-99+ Advanced Anachronia" then courseID = 7 end
+end
+
+CreateGUI()
+--------------------END GUI STUFF--------------------
+
 local courseDescriptions = {
     [1] = "1-30 Jumping the bridge outside the Nature Grotto", -- Starting location https://imgur.com/a/Lj06Ook
     [2] = "30-50 Northern Anachronia Agility Course", -- Starting location https://imgur.com/a/kq80Zi2
@@ -32,9 +153,6 @@ local courseDescriptions = {
     [6] = "77-85 Hefin Agility Course", -- Starting location https://imgur.com/a/17zAd9a
     [7] = "85-99+ Advanced Anachronia Agility Course" -- Starting location https://imgur.com/a/qfrsup3
 }
-
-local API = require("api")
-local UTILS = require("utils")
 
 local function isPlayerAtCoords(x, y)
     local coord = API.PlayerCoord()
@@ -95,6 +213,7 @@ local stageFunctions = {
             jumped = true
         else
             print("Player is not in the starting area. Move to the front of the bridge.")
+            print("Starting location https://imgur.com/a/Lj06Ook")
             playerInCorrectArea = false
             API.Write_LoopyLoop(false)
         end
@@ -123,6 +242,7 @@ local stageFunctions = {
             playerInCorrectArea = true
         else
             print("Player is not in the starting area. Move to the top of the first cliff face.")
+            print("Starting location https://imgur.com/a/kq80Zi2")
             playerInCorrectArea = false
             API.Write_LoopyLoop(false)
         end
@@ -160,6 +280,7 @@ local stageFunctions = {
             playerInCorrectArea = true
         else
             print("Player is not in the starting area. Move to the top of the first cliff face.")
+            print("Starting location https://imgur.com/a/giFrpEL")
             playerInCorrectArea = false
             API.Write_LoopyLoop(false)
         end
@@ -256,6 +377,7 @@ local stageFunctions = {
             playerInCorrectArea = true          
         else
             print("Player is not in the starting area. Move closer to the entrance of the pipe.")
+            print("Starting location https://imgur.com/a/43kKbVV")
             playerInCorrectArea = false
             API.Write_LoopyLoop(false)
         end
@@ -352,6 +474,7 @@ local stageFunctions = {
             playerInCorrectArea = true        
         else
             print("Player is not in the starting area. Move closer to the fallen palm tree.")
+            print("Starting location https://imgur.com/a/hf1tboY")
             playerInCorrectArea = false
             API.Write_LoopyLoop(false)
         end
@@ -409,6 +532,7 @@ local stageFunctions = {
             playerInCorrectArea = true
         else
             print("Player is not in the starting area. Move closer to the walkway.")
+            print("Starting location https://imgur.com/a/17zAd9a")
             playerInCorrectArea = false
             API.Write_LoopyLoop(false)
         end
@@ -563,6 +687,7 @@ local stageFunctions = {
             playerInCorrectArea = true        
         else
             print("Player is not in the starting area. Move closer to the start of the course southwest of the lodestone.")
+            print("Starting location https://imgur.com/a/qfrsup3")
             playerInCorrectArea = false
             API.Write_LoopyLoop(false)
         end
@@ -759,9 +884,17 @@ local function executeStage(stageID)
     end
 end
 
+
 API.Write_LoopyLoop(true)
 while (API.Read_LoopyLoop()) do
     UTILS:antiIdle()
-    RechargeSilverhawkBoots(100)
-    executeStage(courseID)
+    GUIDraw()
+    local checkboxValue = GetComponentValue("StartStopCheckbox")
+    if checkboxValue ~= nil then isChecked = checkboxValue end
+    if isChecked then
+        SetCourse()
+        RechargeSilverhawkBoots(100)
+        executeStage(courseID)        
+        UTILS.randomSleep(500)
+    end
 end
