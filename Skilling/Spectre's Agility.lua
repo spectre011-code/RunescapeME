@@ -17,7 +17,7 @@ v1.2 - 12-09-2024
     - Fixed an issue where the character would get stuck on one side of the rope swing in Circuit 4 (Wilderness)
     - Character will now eat food if HP is low before starting Circuit 4 (Wilderness)
     - Character will now load the last preset if the inventory is full after completing Circuit 6 (Hefin)
-V1.3 - 29-09-2024
+v1.3 - 29-09-2024
     - Added a UI to select the course, removing the need to modify the script
     - Added a console message that links to the starting position for the courses
 
