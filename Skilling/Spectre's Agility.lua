@@ -1,6 +1,6 @@
 ScriptName = "AIO Agility"
 Author = "Spectre011"
-ScriptVersion = "1.4"
+ScriptVersion = "1.5"
 ReleaseDate = "06-09-2024"
 Discord = "not_spectre011"
 
@@ -20,10 +20,13 @@ v1.3 - 29-09-2024
     - Added a UI to select the course, removing the need to modify the script
     - Added a console message that links to the starting position for the courses
 v1.4 - 09-11-2024
-    - Changed UI to standartize with other scritps
+    - Changed UI to standardize with my other scritps
     - Doubled the timeout for crossObstacle() function
     - Added a loop check for crossObstacle() and sleepUntilFacing() functions
     - Added debug prints to Southern Anachronia course
+v1.5 - 09-11-2024
+    - Added garbage collection every cycle
+    - Changed initial state of fellIntoTheHole variable for wildy course
 
 Move to the starting location of the circuit, set the course and click the checkbox to start]]
 
@@ -375,7 +378,7 @@ local stageFunctions = {
 
     [4] = function()
         local playerInCorrectArea = nil
-        local fellIntoTheHole = false
+        local fellIntoTheHole = nil
         local obstacles = {
             {id = 65362, obstacleCoords = {3004, 3938}, finalCoords = {3004, 3950}}, -- obstacle pipe
             {id = 64696, obstacleCoords = {3005, 3952}, finalCoords = {3005, 3958}}, -- ropeswing
@@ -934,4 +937,6 @@ while (API.Read_LoopyLoop()) do
         executeStage(courseID)        
         UTILS.randomSleep(500)
     end
+    print("Memory usage: ", collectgarbage("count"), "KB")
+    collectgarbage("collect")
 end
