@@ -1,11 +1,10 @@
+ScriptName = "AIO Agility"
+Author = "Spectre011"
+ScriptVersion = "1.4"
+ReleaseDate = "06-09-2024"
+Discord = "not_spectre011"
+
 --[[
-
-Spectre's Agility
-Author: Spectre
-Version 1.3
-Date: 06-09-2024
-Discord: spectre011.code_34000
-
 Changelog:
 v1.0 - 06-09-2024
     - Initial release.
@@ -20,6 +19,11 @@ v1.2 - 12-09-2024
 v1.3 - 29-09-2024
     - Added a UI to select the course, removing the need to modify the script
     - Added a console message that links to the starting position for the courses
+v1.4 - 09-11-2024
+    - Changed UI to standartize with other scritps
+    - Doubled the timeout for crossObstacle() function
+    - Added a loop check for crossObstacle() and sleepUntilFacing() functions
+    - Added debug prints to Southern Anachronia course
 
 Move to the starting location of the circuit, set the course and click the checkbox to start]]
 
@@ -123,7 +127,7 @@ end
 
 local function CreateGUI()
     AddBackground("Background", 0.85, 1, ImColor.new(15, 13, 18, 255))
-    AddLabel("Author/Version", "AIO Agility by Spectre011 - V1.3", ImColor.new(165, 0, 0))
+    AddLabel("Author/Version", ScriptName .. " v" .. ScriptVersion .. " - " .. Author, ImColor.new(238, 230, 0))
     AddLabel("CourseSelect", "Select a course:", ImColor.new(255, 255, 255))
     local options = {"1-30 Nature Grotto's bridge", "30-50 Northern Anachronia", "50-52 Southern Anachronia", "52-65 Wilderness","65-77 Het's Oasis", "77-85 Hefin", "85-99+ Advanced Anachronia"}
     AddComboBox("CourseToRun", " ", options)
@@ -164,9 +168,12 @@ local function isPlayerAtCoords(x, y)
 end
 
 local function crossObstacle(id, destX, destY)
+    if not Read_LoopyLoop() then
+        return 
+    end
     print("ID: ", id)
     API.DoAction_Object1(0xb5, API.OFF_ACT_GeneralObject_route0, {id}, 50)    
-    local maxRetries = 20
+    local maxRetries = 40
     local retries = 0
     while API.Read_LoopyLoop() and not isPlayerAtCoords(destX, destY) and 
           API.ReadPlayerAnim() ~= "-1" and API.ReadPlayerAnim() ~= "0" and retries < maxRetries do
@@ -270,74 +277,101 @@ local stageFunctions = {
         local going = true
         local obstacles = {
             {id = 113695, obstacleCoords = {5437, 2217}, finalGoingCoords = {5439, 2217}, finalBackingCoords = {5436, 2217}}, -- cliff face
-            {id = 113696, obstacleCoords = {5456, 2180}, finalGoingCoords = {5456, 2179}, finalBackingCoords = {5456, 2183}}, -- ruined collumn, might get stunned here
+            {id = 113696, obstacleCoords = {5456, 2180}, finalGoingCoords = {5456, 2179}, finalBackingCoords = {5456, 2183}}, -- ruined column, might get stunned here
             {id = 113697, obstacleCoords = {5474, 2171}, finalGoingCoords = {5475, 2171}, finalBackingCoords = {5473, 2171}}, -- ruined temple
             {id = 113698, obstacleCoords = {5483, 2171}, finalGoingCoords = {5489, 2171}, finalBackingCoords = {5482, 2171}}, -- plank
             {id = 113699, obstacleCoords = {5495, 2171}, finalGoingCoords = {5502, 2171}, finalBackingCoords = {5494, 2171}}, -- ruins
             {id = 113700, obstacleCoords = {5524, 2182}, finalGoingCoords = {5527, 2182}, finalBackingCoords = {5523, 2182}}  -- ruins
         }
+    
+        print("Checking if player is in the starting area...")
         if API.PInArea21(5434, 5436, 2216, 2218) then
             playerInCorrectArea = true
+            print("Player is in the starting area.")
         else
             print("Player is not in the starting area. Move to the top of the first cliff face.")
-            print("Starting location https://imgur.com/a/giFrpEL")
+            print("Starting location: https://imgur.com/a/giFrpEL")
             playerInCorrectArea = false
             API.Write_LoopyLoop(false)
         end
+    
         if playerInCorrectArea and going then
+            print("Crossing obstacle 1 (cliff face)...")
             crossObstacle(obstacles[1].id, obstacles[1].finalGoingCoords[1], obstacles[1].finalGoingCoords[2])
+    
             local x1, y1 = (5451 + math.random(-4, 4)), (2205 + math.random(-4, 4))
+            print(string.format("Moving to random intermediate point (%d, %d)...", x1, y1))
             API.DoAction_Tile(WPOINT.new(x1, y1, 0))
-            while API.Read_LoopyLoop() and not API.PInArea21((x1 - 3), (x1 + 3), (y1 - 3), (y1 + 3))  do
+    
+            while API.Read_LoopyLoop() and not API.PInArea21((x1 - 3), (x1 + 3), (y1 - 3), (y1 + 3)) do
                 if API.DeBuffbar_GetIDstatus(14392).found then
-                    print("Stompy")
+                    print("Stunned by 'Stompy'. Waiting to recover...")
                     UTILS.randomSleep(4000)
-                    API.DoAction_Object1(0xb5,API.OFF_ACT_GeneralObject_route0,{obstacles[2].id},50)
-                end
-                UTILS.randomSleep(500)            
-            end
-            API.DoAction_Object1(0xb5,API.OFF_ACT_GeneralObject_route0,{obstacles[2].id},50)
-            while API.Read_LoopyLoop() and not isPlayerAtCoords(obstacles[2].finalGoingCoords[1], obstacles[2].finalGoingCoords[2]) and API.ReadPlayerAnim() ~= "-1" do
-                if API.DeBuffbar_GetIDstatus(14392).found then
-                    print("Stompy")
-                    UTILS.randomSleep(4000)
-                    API.DoAction_Object1(0xb5,API.OFF_ACT_GeneralObject_route0,{obstacles[2].id},50)
+                    print("Attempting to overcome obstacle 2 again (ruined column)...")
+                    API.DoAction_Object1(0xb5, API.OFF_ACT_GeneralObject_route0, {obstacles[2].id}, 50)
                 end
                 UTILS.randomSleep(500)
             end
-            crossObstacle(obstacles[3].id, obstacles[3].finalGoingCoords[1], obstacles[3].finalGoingCoords[2])
-            crossObstacle(obstacles[4].id, obstacles[4].finalGoingCoords[1], obstacles[4].finalGoingCoords[2])
-            crossObstacle(obstacles[5].id, obstacles[5].finalGoingCoords[1], obstacles[5].finalGoingCoords[2])
-            crossObstacle(obstacles[6].id, obstacles[6].finalGoingCoords[1], obstacles[6].finalGoingCoords[2])
-            going = false
-        end
-        if playerInCorrectArea and not going then
-            crossObstacle(obstacles[6].id, obstacles[6].finalBackingCoords[1], obstacles[6].finalBackingCoords[2])
-            crossObstacle(obstacles[5].id, obstacles[5].finalBackingCoords[1], obstacles[5].finalBackingCoords[2])
-            crossObstacle(obstacles[4].id, obstacles[4].finalBackingCoords[1], obstacles[4].finalBackingCoords[2])
-            crossObstacle(obstacles[3].id, obstacles[3].finalBackingCoords[1], obstacles[3].finalBackingCoords[2])
-            crossObstacle(obstacles[2].id, obstacles[2].finalBackingCoords[1], obstacles[2].finalBackingCoords[2])
-            local x2, y2 = (5454 + math.random(-4, 4)), (2206 + math.random(-4, 4))
-            API.DoAction_Tile(WPOINT.new(x2, y2, 0))
-            while API.Read_LoopyLoop() and not API.PInArea21((x2 - 3), (x2 + 3), (y2 - 3), (y2 + 3))  do
+    
+            print("Crossing obstacle 2 (ruined column)...")
+            API.DoAction_Object1(0xb5, API.OFF_ACT_GeneralObject_route0, {obstacles[2].id}, 50)
+    
+            while API.Read_LoopyLoop() and not isPlayerAtCoords(obstacles[2].finalGoingCoords[1], obstacles[2].finalGoingCoords[2]) and API.ReadPlayerAnim() ~= "-1" do
                 if API.DeBuffbar_GetIDstatus(14392).found then
-                    print("Stompy")
+                    print("Stunned by 'Stompy'. Waiting to recover...")
                     UTILS.randomSleep(4000)
-                    API.DoAction_Object1(0xb5,API.OFF_ACT_GeneralObject_route0,{obstacles[1].id},50)
+                    print("Attempting to overcome obstacle 2 again (ruined column)...")
+                    API.DoAction_Object1(0xb5, API.OFF_ACT_GeneralObject_route0, {obstacles[2].id}, 50)
                 end
-                UTILS.randomSleep(500)            
+                UTILS.randomSleep(500)
             end
-            API.DoAction_Object1(0xb5,API.OFF_ACT_GeneralObject_route0,{obstacles[1].id},50)
+    
+            for i = 3, 6 do
+                print(string.format("Crossing obstacle %d...", i))
+                crossObstacle(obstacles[i].id, obstacles[i].finalGoingCoords[1], obstacles[i].finalGoingCoords[2])
+            end
+    
+            going = false
+            print("All obstacles crossed in the forward direction.")
+        end
+    
+        if playerInCorrectArea and not going then
+            print("Returning over obstacles in reverse order...")
+    
+            for i = 6, 2, -1 do
+                print(string.format("Crossing obstacle %d in reverse...", i))
+                crossObstacle(obstacles[i].id, obstacles[i].finalBackingCoords[1], obstacles[i].finalBackingCoords[2])
+            end
+    
+            local x2, y2 = (5454 + math.random(-4, 4)), (2206 + math.random(-4, 4))
+            print(string.format("Moving to random intermediate point (%d, %d)...", x2, y2))
+            API.DoAction_Tile(WPOINT.new(x2, y2, 0))
+    
+            while API.Read_LoopyLoop() and not API.PInArea21((x2 - 3), (x2 + 3), (y2 - 3), (y2 + 3)) do
+                if API.DeBuffbar_GetIDstatus(14392).found then
+                    print("Stunned by 'Stompy'. Waiting to recover...")
+                    UTILS.randomSleep(4000)
+                    print("Attempting to overcome obstacle 1 again (cliff face)...")
+                    API.DoAction_Object1(0xb5, API.OFF_ACT_GeneralObject_route0, {obstacles[1].id}, 50)
+                end
+                UTILS.randomSleep(500)
+            end
+    
+            print("Crossing obstacle 1 in reverse (cliff face)...")
+            API.DoAction_Object1(0xb5, API.OFF_ACT_GeneralObject_route0, {obstacles[1].id}, 50)
+    
             while API.Read_LoopyLoop() and not isPlayerAtCoords(obstacles[1].finalBackingCoords[1], obstacles[1].finalBackingCoords[2]) and API.ReadPlayerAnim() ~= "-1" do
                 if API.DeBuffbar_GetIDstatus(14392).found then
-                    print("Stompy")
+                    print("Stunned by 'Stompy'. Waiting to recover...")
                     UTILS.randomSleep(4000)
-                    API.DoAction_Object1(0xb5,API.OFF_ACT_GeneralObject_route0,{obstacles[1].id},50)
+                    print("Attempting to overcome obstacle 1 again (cliff face)...")
+                    API.DoAction_Object1(0xb5, API.OFF_ACT_GeneralObject_route0, {obstacles[1].id}, 50)
                 end
                 UTILS.randomSleep(500)
             end
         end
     end,
+    
 
     [4] = function()
         local playerInCorrectArea = nil
@@ -667,6 +701,9 @@ local stageFunctions = {
         end
 
         local function sleepUntilFacing(targetOrientation)
+            if not Read_LoopyLoop() then
+                return 
+            end
             local tolerance = 0.01
             local maxWaitTime = 5
             local elapsedTime = 0        
