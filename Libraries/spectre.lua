@@ -68,9 +68,25 @@ function SpectreUtils.GetItemsInInventory()
             print("item.notvisible:", item.notvisible)
             print("item.OP:", item.OP)
             print("item.xy:", item.xy)
-            print("-----------------")
-            
+            print("-----------------")            
         end
+    end
+end
+
+--Prints all abitilies from specified ability bar
+function SpectreUtils.GetAbilitiesFromBar(BarID)
+    local bar = API.GetABarInfo(BarID)
+    for _, ability in ipairs(bar) do
+        print("----------------------------")
+        print("ability.slot: ", ability.slot)
+        print("ability.id: ", ability.id)
+        print("ability.name: ", ability.name)
+        print("ability.hotkey: ", ability.hotkey)
+        print("ability.cooldown_timer: ", ability.cooldown_timer)
+        print("ability.info: ", ability.info)
+        print("ability.action: ", ability.action)
+        print("ability.enabled: ", ability.enabled)
+        print("----------------------------")
     end
 end
 
@@ -127,10 +143,10 @@ end
 --Checks if the timer of an instance is at 00:00 and returns true or false
 function SpectreUtils.TimerHitZero()
     local timer = {
-        InterfaceComp5.new(861, 0, -1, -1, 0),
-        InterfaceComp5.new(861, 2, -1, 0, 0),
-        InterfaceComp5.new(861, 4, -1, 2, 0),
-        InterfaceComp5.new(861, 8, -1, 4, 0)
+        InterfaceComp5.new(861, 0, -1, 0),
+        InterfaceComp5.new(861, 2, -1, 0),
+        InterfaceComp5.new(861, 4, -1, 0),
+        InterfaceComp5.new(861, 8, -1, 0)
     }
     local result = API.ScanForInterfaceTest2Get(false, timer)
     if result and #result > 0 and result[1].textids then
@@ -185,19 +201,21 @@ function SpectreUtils.CheckNPCMessagesRecent(search_strings, max_seconds)
 end
 
 -- Wait until the object appears
-function SpectreUtils.WaitForObjectToAppear(ObjIDList, ObjType)
+function SpectreUtils.WaitForObjectToAppear(ObjID, ObjType)
     while API.Read_LoopyLoop() do
-        local objects = API.GetAllObjArray1(ObjIDList, 75, {ObjType})
+        local objects = API.GetAllObjArray1({ObjID}, 75, {ObjType})
         if objects and #objects > 0 then
             for _, object in ipairs(objects) do
                 local id = object.Id or 0
-                local objType = object.Type or 0
-                for _, ObjID in ipairs(ObjIDList) do
-                    if id == ObjID and objType == ObjType then return end
+                local objType = object.Type or 0           
+                if id == ObjID and objType == ObjType then
+                    return
                 end
             end
+        else
+            print("No objects found on this attempt.")
         end
-        SpectreUtils.Sleep(0.1)
+        SpectreUtils.Sleep(0.2)
     end
 end
 
@@ -207,11 +225,9 @@ function SpectreUtils.MemStrandTele()
     SpectreUtils.Sleep(1)    
     while not API.PInArea21(2282, 2302, 3544, 3564) and API.Read_LoopyLoop() do
         API.DoAction_Interface(0x24, 0x9A3E, 1, 1473, 21, 10, API.OFF_ACT_GeneralInterface_route) -- Memory Strand teleport  
-        SpectreUtils.Sleep(0.5)      
+        SpectreUtils.Sleep(6)
     end
-    while API.ReadPlayerAnim() ~= 0 and API.Read_LoopyLoop() do
-        SpectreUtils.Sleep(0.5)
-    end
+    while API.ReadPlayerAnim() ~= 0 and API.Read_LoopyLoop() do SpectreUtils.Sleep(0.5) end
     API.DoAction_Interface(0x24, 0x9A3E, 1, 1473, 15, -1, API.OFF_ACT_GeneralInterface_route) -- Close currency pouch
 end
 
@@ -237,6 +253,33 @@ function SpectreUtils.ActivatePrayer(PrayerBuffID)
     end
     local currentTick = API.Get_tick()
     if not API.Buffbar_GetIDstatus(PrayerBuffID).found then
+        if activationTick == 0 or currentTick > activationTick + delayTicks then
+            API.DoAction_Ability(PrayerName, 1, API.OFF_ACT_GeneralInterface_route)
+            activationTick = currentTick
+        end
+    end
+end
+
+--Deactivates prayer
+function SpectreUtils.DeactivatePrayer(PrayerBuffID)
+    local prayerMapping = {
+        [26033] = "Soul Split",
+        [26041] = "Deflect Magic",
+        [26044] = "Deflect Ranged",
+        [26040] = "Deflect Melee",
+        [30745] = "Deflect Necromancy",
+        [25959] = "Protect from Magic",
+        [25960] = "Protect from Ranged",
+        [25961] = "Protect from Melee",
+        [30831] = "Protect from Necromancy"        
+    }
+    local PrayerName = prayerMapping[PrayerBuffID]
+    if not PrayerName then
+        print("Invalid PrayerBuffID: " .. PrayerBuffID)
+        return
+    end
+    local currentTick = API.Get_tick()
+    if API.Buffbar_GetIDstatus(PrayerBuffID).found then
         if activationTick == 0 or currentTick > activationTick + delayTicks then
             API.DoAction_Ability(PrayerName, 1, API.OFF_ACT_GeneralInterface_route)
             activationTick = currentTick
@@ -294,6 +337,16 @@ function SpectreUtils.RechargeSilverhawkBoots(minQuantity)
             end
         end
     end
+end
+
+--Checks if from a list of IDS if the items are in players inventory and returns boolean
+function SpectreUtils.inventoryContainsAny(ids)
+    for _, id in ipairs(ids) do
+        if Inventory:Contains(id) then
+            return true
+        end
+    end
+    return false
 end
 
 return SpectreUtils
