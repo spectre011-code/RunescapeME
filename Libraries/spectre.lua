@@ -119,10 +119,25 @@ function SpectreUtils.GetAllObjects(Id, Range, Type)
             print("object.CalcX: ", object.CalcX)
             print("object.CalcY: ", object.CalcY)
             print("object.Tile_XYZ: ", object.Tile_XYZ)
+            print("object.Tile_XYZ.x: ", object.Tile_XYZ.x)
+            print("object.Tile_XYZ.y: ", object.Tile_XYZ.y)
+            print("object.Tile_XYZ.z: ", object.Tile_XYZ.z)
             print("object.Pixel_XYZ: ", object.Pixel_XYZ)            
             print("---------------------------------")          
         end
     end 
+end
+
+function SpectreUtils.GetVB(VB, level)
+    local var = API.VB_FindPSettinOrder(VB, level)
+    print("--------------------------")
+    print("state: " .. var.state)
+    print("addr: " .. var.addr)
+    print("indexaddr_orig: " .. var.indexaddr_orig)
+    print("id: " .. var.id)
+    print("FSarray: " .. var.FSarray)
+    print("Levels_deep: " .. var.Levels_deep)
+    print("--------------------------")
 end
 
 --Checks if the player is a the specified coordinates and returns true or false
