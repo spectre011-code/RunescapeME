@@ -135,9 +135,20 @@ function SpectreUtils.GetVB(VB, level)
     print("addr: " .. var.addr)
     print("indexaddr_orig: " .. var.indexaddr_orig)
     print("id: " .. var.id)
-    print("FSarray: " .. var.FSarray)
-    print("Levels_deep: " .. var.Levels_deep)
     print("--------------------------")
+end
+
+--Checks if the player is in a specified area
+function SpectreUtils.IsPlayerInArea(x, y, z, radius)
+    local coord = API.PlayerCoord()
+    local dx = math.abs(coord.x - x)
+    local dy = math.abs(coord.y - y)
+    local distance = math.sqrt(dx^2 + dy^2)
+    if distance <= radius and coord.z == z then
+        return true
+    else
+        return false
+    end
 end
 
 --Checks if the player is a the specified coordinates and returns true or false
@@ -234,15 +245,16 @@ function SpectreUtils.WaitForObjectToAppear(ObjID, ObjType)
     end
 end
 
+
+
 --Memory strand teleport from currency pouch
 function SpectreUtils.MemStrandTele()
     API.DoAction_Interface(0x24, 0x9A3E, 1, 1473, 10, 4097, API.OFF_ACT_GeneralInterface_route) -- Open currency pouch
-    SpectreUtils.Sleep(1)    
-    while not API.PInArea21(2282, 2302, 3544, 3564) and API.Read_LoopyLoop() do
+    SpectreUtils.Sleep(0.2)
+    while API.Read_LoopyLoop() and not SpectreUtils.IsPlayerInArea(2293, 3554, 0, 5) do
         API.DoAction_Interface(0x24, 0x9A3E, 1, 1473, 21, 10, API.OFF_ACT_GeneralInterface_route) -- Memory Strand teleport  
         SpectreUtils.Sleep(6)
     end
-    while API.ReadPlayerAnim() ~= 0 and API.Read_LoopyLoop() do SpectreUtils.Sleep(0.5) end
     API.DoAction_Interface(0x24, 0x9A3E, 1, 1473, 15, -1, API.OFF_ACT_GeneralInterface_route) -- Close currency pouch
 end
 
@@ -362,6 +374,29 @@ function SpectreUtils.inventoryContainsAny(ids)
         end
     end
     return false
+end
+
+function SpectreUtils.SurgeIfFacing(Orientation)
+    local Surge = API.GetABs_id(14233)
+    local PlayerFacing = math.floor(API.calculatePlayerOrientation())
+    if PlayerFacing == 0 then PlayerFacing = 360 end
+    if Orientation == 0 then Orientation = 360 end
+    
+    if Orientation == PlayerFacing then
+        if (Surge.id ~= 0 and Surge.enabled and Surge.cooldown_timer < 1) then
+            API.DoAction_Ability_Direct(Surge, 1, API.OFF_ACT_GeneralInterface_route)
+        end
+    end
+end
+
+function SpectreUtils.Dive(X, Y, Z)
+    local Bdive = API.GetABs_id(30331)
+    local Dive = API.GetABs_id(23714)
+    if (Bdive.id ~= 0 and Bdive.enabled and Bdive.cooldown_timer < 1) or (Dive.id ~= 0 and Bdive.enabled and Dive.cooldown_timer < 1) then
+        if not API.DoAction_BDive_Tile(WPOINT.new(X, Y, Z)) then
+            API.DoAction_Dive_Tile(WPOINT.new(X, Y, Z))
+        end
+    end
 end
 
 return SpectreUtils
