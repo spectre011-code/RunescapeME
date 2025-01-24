@@ -2,14 +2,20 @@ local API = require("api")
 
 local SpectreUtils = {}
 
+VERSION = "1.0"
+
 --Simple sleep
+---@param seconds number
+---@return boolean
 function SpectreUtils.Sleep(seconds)
     local endTime = os.clock() + seconds
     while os.clock() < endTime do
     end
+    return true
 end
 
 --Prints all the buffs
+---@return boolean
 function SpectreUtils.GetBuffs()
     local buffs = API.Buffbar_GetAllIDs()
     if buffs then
@@ -21,9 +27,11 @@ function SpectreUtils.GetBuffs()
             print("----------")
         end
     end
+    return true
 end
 
 --Prints all the debuffs
+---@return boolean
 function SpectreUtils.GetDebuffs()
     local debuffs = API.DeBuffbar_GetAllIDs()
     if debuffs then
@@ -35,9 +43,11 @@ function SpectreUtils.GetDebuffs()
             print("----------")
         end
     end
+    return true
 end
 
 --Prints all the items in inventory
+---@return boolean
 function SpectreUtils.GetItemsInInventory()
     local items = API.ReadInvArrays33()
     if items and #items > 0 then
@@ -71,9 +81,12 @@ function SpectreUtils.GetItemsInInventory()
             print("-----------------")            
         end
     end
+    return true
 end
 
 --Prints all abitilies from specified ability bar
+---@param BarID number
+---@return boolean
 function SpectreUtils.GetAbilitiesFromBar(BarID)
     local bar = API.GetABarInfo(BarID)
     for _, ability in ipairs(bar) do
@@ -88,9 +101,14 @@ function SpectreUtils.GetAbilitiesFromBar(BarID)
         print("ability.enabled: ", ability.enabled)
         print("----------------------------")
     end
+    return true
 end
 
 --Prints all objects with specified parameters
+---@param Id table|number
+---@param Range number
+---@param Type table|number
+---@return boolean
 function SpectreUtils.GetAllObjects(Id, Range, Type)
     local objects = API.GetAllObjArray1({Id}, Range, {Type})
     if objects and #objects > 0 then
@@ -125,20 +143,30 @@ function SpectreUtils.GetAllObjects(Id, Range, Type)
             print("object.Pixel_XYZ: ", object.Pixel_XYZ)            
             print("---------------------------------")          
         end
-    end 
+    end
+    return true
 end
 
+--Prints info about specified VB
+---@param VB number
+---@return boolean
 function SpectreUtils.GetVB(VB, level)
-    local var = API.VB_FindPSettinOrder(VB, level)
+    local var = API.VB_FindPSettinOrder(VB)
     print("--------------------------")
     print("state: " .. var.state)
     print("addr: " .. var.addr)
     print("indexaddr_orig: " .. var.indexaddr_orig)
     print("id: " .. var.id)
     print("--------------------------")
+    return true
 end
 
 --Checks if the player is in a specified area
+---@param x number
+---@param y number
+---@param z number
+---@param radius number
+---@return boolean
 function SpectreUtils.IsPlayerInArea(x, y, z, radius)
     local coord = API.PlayerCoord()
     local dx = math.abs(coord.x - x)
@@ -151,7 +179,11 @@ function SpectreUtils.IsPlayerInArea(x, y, z, radius)
     end
 end
 
---Checks if the player is a the specified coordinates and returns true or false
+--Checks if the player is a the specified coordinates
+---@param x number
+---@param y number
+---@param z number
+---@return boolean
 function SpectreUtils.IsPlayerAtCoords(x, y, z)
     local coord = API.PlayerCoord()
     if x == coord.x and y == coord.y and z == coord.z then
@@ -162,11 +194,20 @@ function SpectreUtils.IsPlayerAtCoords(x, y, z)
 end
 
 --Walks to specified coordinates
+---@param x number
+---@param y number
+---@param z number
+---@return boolean
 function SpectreUtils.WalkToCoordinates(x,y,z)
-    API.DoAction_Tile(WPOINT.new(x,y,z))
+    if API.DoAction_Tile(WPOINT.new(x,y,z)) then
+        return true
+    else
+        return false
+    end
 end
 
---Checks if the timer of an instance is at 00:00 and returns true or false
+--Checks if the timer of an instance is at 00:00
+---@return boolean
 function SpectreUtils.TimerHitZero()
     local timer = {
         InterfaceComp5.new(861, 0, -1, 0),
@@ -189,6 +230,8 @@ function SpectreUtils.TimerHitZero()
 end
 
 --Use ability by name
+---@param string string
+---@return boolean
 function SpectreUtils.UseAbilityByName(string)    
     local ability = UTILS.getSkillOnBar(string)
     if ability ~= nil then
@@ -198,6 +241,9 @@ function SpectreUtils.UseAbilityByName(string)
 end
 
 -- Checks if a message from an NPC appeared on chat recently up to defined seconds. Can check from a list
+---@param search_strings table|string
+---@param max_seconds number
+---@return string
 function SpectreUtils.CheckNPCMessagesRecent(search_strings, max_seconds)
     local chat = API.ChatGetMessages()
     local current_time = os.date("*t")
@@ -227,6 +273,7 @@ function SpectreUtils.CheckNPCMessagesRecent(search_strings, max_seconds)
 end
 
 -- Wait until the object appears
+---@return boolean
 function SpectreUtils.WaitForObjectToAppear(ObjID, ObjType)
     while API.Read_LoopyLoop() do
         local objects = API.GetAllObjArray1({ObjID}, 75, {ObjType})
@@ -243,11 +290,11 @@ function SpectreUtils.WaitForObjectToAppear(ObjID, ObjType)
         end
         SpectreUtils.Sleep(0.2)
     end
+    return true
 end
 
-
-
 --Memory strand teleport from currency pouch
+---@return boolean
 function SpectreUtils.MemStrandTele()
     API.DoAction_Interface(0x24, 0x9A3E, 1, 1473, 10, 4097, API.OFF_ACT_GeneralInterface_route) -- Open currency pouch
     SpectreUtils.Sleep(0.2)
@@ -256,11 +303,14 @@ function SpectreUtils.MemStrandTele()
         SpectreUtils.Sleep(6)
     end
     API.DoAction_Interface(0x24, 0x9A3E, 1, 1473, 15, -1, API.OFF_ACT_GeneralInterface_route) -- Close currency pouch
+    return true
 end
 
 local activationTick = 0
 local delayTicks = 2
 --Activates prayer
+---@param PrayerBuffID number
+---@return boolean
 function SpectreUtils.ActivatePrayer(PrayerBuffID)
     local prayerMapping = {
         [26033] = "Soul Split",
@@ -281,13 +331,19 @@ function SpectreUtils.ActivatePrayer(PrayerBuffID)
     local currentTick = API.Get_tick()
     if not API.Buffbar_GetIDstatus(PrayerBuffID).found then
         if activationTick == 0 or currentTick > activationTick + delayTicks then
-            API.DoAction_Ability(PrayerName, 1, API.OFF_ACT_GeneralInterface_route)
-            activationTick = currentTick
+            if API.DoAction_Ability(PrayerName, 1, API.OFF_ACT_GeneralInterface_route) then
+                activationTick = currentTick
+                return true
+            else 
+                return false
+            end            
         end
     end
 end
 
 --Deactivates prayer
+---@param PrayerBuffID number
+---@return boolean
 function SpectreUtils.DeactivatePrayer(PrayerBuffID)
     local prayerMapping = {
         [26033] = "Soul Split",
@@ -308,13 +364,19 @@ function SpectreUtils.DeactivatePrayer(PrayerBuffID)
     local currentTick = API.Get_tick()
     if API.Buffbar_GetIDstatus(PrayerBuffID).found then
         if activationTick == 0 or currentTick > activationTick + delayTicks then
-            API.DoAction_Ability(PrayerName, 1, API.OFF_ACT_GeneralInterface_route)
-            activationTick = currentTick
+            if API.DoAction_Ability(PrayerName, 1, API.OFF_ACT_GeneralInterface_route) then
+                activationTick = currentTick
+                return true
+            else
+                return false
+            end
         end
     end
 end
 
 --Uses incense sticks and keep them active
+---@param buffID number
+---@return boolean
 function SpectreUtils.CheckIncenseStick(buffID)
     local buffs = API.Buffbar_GetAllIDs()
     local found = false
@@ -338,6 +400,7 @@ function SpectreUtils.CheckIncenseStick(buffID)
                 break
             end
         end
+        return true
     end    
     if not found then
         API.DoAction_Inventory1(buffID, 0, 2, API.OFF_ACT_GeneralInterface_route) -- Overload
@@ -345,10 +408,14 @@ function SpectreUtils.CheckIncenseStick(buffID)
             API.DoAction_Inventory1(buffID, 0, 1, API.OFF_ACT_GeneralInterface_route) -- Extend
             SpectreUtils.Sleep(0.2)
         end
+        return true
     end
+    return false
 end
 
 --Recharges silverhawk boots when stored feathers are bellow minimum quantity
+---@param minQuantity number
+---@return boolean
 function SpectreUtils.RechargeSilverhawkBoots(minQuantity)
     local item = API.Container_Get_s(94,30924)
     if item.item_id == 30924 then
@@ -357,16 +424,20 @@ function SpectreUtils.RechargeSilverhawkBoots(minQuantity)
             local silverhawkDown = API.CheckInvStuff0(34823)
             if silverhawkFeather ~= false then
                 API.DoAction_Inventory1(30915,0,1,API.OFF_ACT_GeneralInterface_route)
-                return
+                return true
             elseif silverhawkDown ~= false then
                 API.DoAction_Inventory1(34823,0,1,API.OFF_ACT_GeneralInterface_route)
-                return
+                return true
             end
         end
+        return false
     end
+    return false
 end
 
---Checks if from a list of IDS if the items are in players inventory and returns boolean
+--Checks if from a list of IDS if the items are in players Inventory
+---@param ids number
+---@return boolean
 function SpectreUtils.inventoryContainsAny(ids)
     for _, id in ipairs(ids) do
         if Inventory:Contains(id) then
@@ -376,6 +447,9 @@ function SpectreUtils.inventoryContainsAny(ids)
     return false
 end
 
+--Surges if the player is facing the specified orientation
+---@param Orientation number
+---@return boolean
 function SpectreUtils.SurgeIfFacing(Orientation)
     local Surge = API.GetABs_id(14233)
     local PlayerFacing = math.floor(API.calculatePlayerOrientation())
@@ -384,17 +458,30 @@ function SpectreUtils.SurgeIfFacing(Orientation)
     
     if Orientation == PlayerFacing then
         if (Surge.id ~= 0 and Surge.enabled and Surge.cooldown_timer < 1) then
-            API.DoAction_Ability_Direct(Surge, 1, API.OFF_ACT_GeneralInterface_route)
+            if API.DoAction_Ability_Direct(Surge, 1, API.OFF_ACT_GeneralInterface_route) then
+                return true
+            else
+                return false
+            end
         end
     end
 end
 
+--Dives to the specified coordinates
+---@param X number
+---@param Y number
+---@param Z number
+---@return boolean
 function SpectreUtils.Dive(X, Y, Z)
     local Bdive = API.GetABs_id(30331)
     local Dive = API.GetABs_id(23714)
     if (Bdive.id ~= 0 and Bdive.enabled and Bdive.cooldown_timer < 1) or (Dive.id ~= 0 and Bdive.enabled and Dive.cooldown_timer < 1) then
         if not API.DoAction_BDive_Tile(WPOINT.new(X, Y, Z)) then
-            API.DoAction_Dive_Tile(WPOINT.new(X, Y, Z))
+            if API.DoAction_Dive_Tile(WPOINT.new(X, Y, Z)) then
+                return true
+            else
+                return false
+            end
         end
     end
 end
