@@ -42,7 +42,7 @@ v1.8 - 25-01-2025
     - The script now correctly updates the obstacle ID label when using the Hefin course
     - Changed the hefin banking function to deposit all items instead of loading last preset to prevent getting stuck when you get lamps and stars
 
-Move to the starting location of the circuit, set the course and click the checkbox to start]]
+Move to the starting location of the circuit and set the course]]
 
 local API = require("api")
 local UTILS = require("utils")
