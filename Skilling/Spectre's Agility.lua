@@ -1,6 +1,6 @@
 ScriptName = "AIO Agility"
 Author = "Spectre011"
-ScriptVersion = "1.7"
+ScriptVersion = "1.8"
 ReleaseDate = "06-09-2024"
 Discord = "not_spectre011"
 
@@ -38,6 +38,9 @@ v1.7 - 25-01-2025
     - Added advanced gnome stronghold circuit
     - Added advanced barbarian outpost circuit
     - Changes in UI to remove confusing checkbox and add obstacle ID label
+v1.8 - 25-01-2025
+    - The script now correctly updates the obstacle ID label when using the Hefin course
+    - Changed the hefin banking function to deposit all items instead of loading last preset to prevent getting stuck when you get lamps and stars
 
 Move to the starting location of the circuit, set the course and click the checkbox to start]]
 
@@ -661,9 +664,14 @@ local stageFunctions = {
         end
         local function FullInvCheck()
             if API.InvFull_() then
-                API.DoAction_Object1(0x33,API.OFF_ACT_GeneralObject_route3,{92692},50)
-                while API.Read_LoopyLoop() and API.InvFull_() do
+                while API.Read_LoopyLoop() and not API.CheckBankVarp() do
+                    API.DoAction_Object1(0x2e,API.OFF_ACT_GeneralObject_route1,{92692},50)
                     UTILS.randomSleep(2000)
+                end
+                while API.Read_LoopyLoop() and API.InvFull_()do
+                    API.DoAction_Interface(0xffffffff,0xffffffff,1,517,39,-1,API.OFF_ACT_GeneralInterface_route)
+                    UTILS.randomSleep(2000)
+                    API.KeyboardPress2(0x33, 60, 100)
                 end
             end
         end
@@ -676,40 +684,49 @@ local stageFunctions = {
             API.Write_LoopyLoop(false)
         end
         if playerInCorrectArea then
+            FullInvCheck()
+            UpdateStatus(obstacles[1].id)
             API.DoAction_Object1(0xb5, API.OFF_ACT_GeneralObject_route0, {obstacles[1].id}, 50)         
             waitForCoords(obstacles[1].finalCoords[1], obstacles[1].finalCoords[2], obstacles[2].finalCoords[1], obstacles[2].finalCoords[2])
             midCourse = true            
             while API.Read_LoopyLoop() and midCourse do
                 if API.ReadPlayerAnim() == 0 then
                     if isPlayerAtCoords(obstacles[1].finalCoords[1], obstacles[1].finalCoords[2]) then
+                        UpdateStatus(obstacles[2].id)
                         API.DoAction_Object1(0xb5, API.OFF_ACT_GeneralObject_route0, {obstacles[2].id}, 50)
                         waitForCoords(obstacles[2].finalCoords[1], obstacles[2].finalCoords[2], obstacles[3].finalCoords[1], obstacles[3].finalCoords[2])
 
                     elseif isPlayerAtCoords(obstacles[2].finalCoords[1], obstacles[2].finalCoords[2]) then
                         local window = #API.GetAllObjArray1({94053}, 10, {0})                        
                         if window and window > 0 then
+                            UpdateStatus(obstacles[7].id)
                             API.DoAction_Object1(0xb5, API.OFF_ACT_GeneralObject_route0, {obstacles[7].id}, 50)
                             waitForCoords(obstacles[4].finalCoords[1], obstacles[4].finalCoords[2], 99999, 99999)
                         else
+                            UpdateStatus(obstacles[3].id)
                             API.DoAction_Object1(0xb5, API.OFF_ACT_GeneralObject_route0, {obstacles[3].id}, 50)
                             waitForCoords(obstacles[3].finalCoords[1], obstacles[3].finalCoords[2], obstacles[4].finalCoords[1], obstacles[4].finalCoords[2])
                         end
 
                     elseif isPlayerAtCoords(obstacles[3].finalCoords[1], obstacles[3].finalCoords[2]) then
+                        UpdateStatus(obstacles[4].id)
                         API.DoAction_Object1(0xb5, API.OFF_ACT_GeneralObject_route0, {obstacles[4].id}, 50)
                         waitForCoords(obstacles[4].finalCoords[1], obstacles[4].finalCoords[2], obstacles[5].finalCoords[5], obstacles[4].finalCoords[2])
 
                     elseif isPlayerAtCoords(obstacles[4].finalCoords[1], obstacles[4].finalCoords[2]) then
                         local lightCreature = #API.GetAllObjArrayInteract({20273}, 5, {1})                        
                         if lightCreature and lightCreature > 0 then
+                            UpdateStatus(20273)
                             API.DoAction_NPC(0xb5, API.OFF_ACT_InteractNPC_route, {20273}, 50)
                             waitForCoords(obstacles[6].finalCoords[1], obstacles[6].finalCoords[2], 99999, 99999)
                         else
+                            UpdateStatus(obstacles[5].id)
                             API.DoAction_Object1(0xb5, API.OFF_ACT_GeneralObject_route0, {obstacles[5].id}, 50)
                             waitForCoords(obstacles[5].finalCoords[1], obstacles[5].finalCoords[2], obstacles[6].finalCoords[5], obstacles[6].finalCoords[2])
                         end
 
                     elseif isPlayerAtCoords(obstacles[5].finalCoords[1], obstacles[5].finalCoords[2]) then
+                        UpdateStatus(20274)
                         API.DoAction_NPC(0xb5, API.OFF_ACT_InteractNPC_route, {20274}, 50)
                         waitForCoords(obstacles[6].finalCoords[1], obstacles[6].finalCoords[2], 99999, 99999)
                         midCourse = false
