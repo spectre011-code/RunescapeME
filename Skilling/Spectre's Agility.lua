@@ -1,6 +1,6 @@
 ScriptName = "AIO Agility"
 Author = "Spectre011"
-ScriptVersion = "1.6"
+ScriptVersion = "1.7"
 ReleaseDate = "06-09-2024"
 Discord = "not_spectre011"
 
@@ -30,6 +30,14 @@ v1.5 - 09-11-2024
 v1.6 - 04-01-2025
     - Fixed the dive function that broke with API update
     - Reduced sleep in crossObstacle() function from 1000ms to 500ms
+v1.7 - 25-01-2025
+    - Refactored Wildy circuit to work when multiple people are using the circuit, repeat failed obstacles and properly exit the hole
+    - Added surges to Het's Oasis circuit
+    - Fixed a bug in crossObstacle()
+    - Added antecipation before 2 obstacles in Advanced Anachronia circuit where the player can get stunnned by dinossaurs, if in ability bar
+    - Added advanced gnome stronghold circuit
+    - Added advanced barbarian outpost circuit
+    - Changes in UI to remove confusing checkbox and add obstacle ID label
 
 Move to the starting location of the circuit, set the course and click the checkbox to start]]
 
@@ -38,6 +46,8 @@ local UTILS = require("utils")
 
 local courseID = 0
 --------------------START GUI STUFF--------------------
+local selectedOption = nil
+local CurrentStatus = "Starting"
 local UIComponents = {}
 local function GetComponentAmount()
     local amount = 0
@@ -103,12 +113,6 @@ local function AddComboBox(name, text, options)
     UIComponents[GetComponentAmount() + 1] = {name, ComboBox, "ComboBox"}
 end
 
-local function AddCheckbox(name, text)
-    CheckBox = API.CreateIG_answer()
-    CheckBox.box_name = text
-    UIComponents[GetComponentAmount() + 1] = {name, CheckBox, "CheckBox"}
-end
-
 local function GUIDraw()
     for i=1,GetComponentAmount() do
         local componentKind = UIComponents[i][3]
@@ -136,13 +140,22 @@ local function CreateGUI()
     AddBackground("Background", 0.85, 1, ImColor.new(15, 13, 18, 255))
     AddLabel("Author/Version", ScriptName .. " v" .. ScriptVersion .. " - " .. Author, ImColor.new(238, 230, 0))
     AddLabel("CourseSelect", "Select a course:", ImColor.new(255, 255, 255))
-    local options = {"1-30 Nature Grotto's bridge", "30-50 Northern Anachronia", "50-52 Southern Anachronia", "52-65 Wilderness","65-77 Het's Oasis", "77-85 Hefin", "85-99+ Advanced Anachronia"}
+    local options = {"- none -","1-30 Nature Grotto's bridge", "30-50 Northern Anachronia", "50-52 Southern Anachronia", "52-65 Wilderness","65-77 Het's Oasis", "77-85 Hefin", "85-99+ Advanced Anachronia", "Advanced Gnome Stronghold", "Advanced Barbarian Outpost"}
     AddComboBox("CourseToRun", " ", options)
-    AddCheckbox("StartStopCheckbox", "Start/Finish lap and stop")
+    AddLabel("Status", "Obstacle ID: 0", ImColor.new(238, 230, 0))
+end
+
+local function UpdateStatus(newStatus)
+    CurrentStatus = newStatus
+    local statusLabel = GetComponentByName("Status")
+    if statusLabel then
+        statusLabel[2].string_value = "Obstacle ID: " .. CurrentStatus
+    end
 end
 
 local function SetCourse()
     selectedOption = GetComponentValue("CourseToRun") or selectedOption
+    if selectedOption == "- none -" then courseID = 0 end
     if selectedOption == "1-30 Nature Grotto's bridge" then courseID = 1 end
     if selectedOption == "30-50 Northern Anachronia" then courseID = 2 end
     if selectedOption == "50-52 Southern Anachronia" then courseID = 3 end
@@ -150,6 +163,8 @@ local function SetCourse()
     if selectedOption == "65-77 Het's Oasis" then courseID = 5 end
     if selectedOption == "77-85 Hefin" then courseID = 6 end
     if selectedOption == "85-99+ Advanced Anachronia" then courseID = 7 end
+    if selectedOption == "Advanced Gnome Stronghold" then courseID = 8 end
+    if selectedOption == "Advanced Barbarian Outpost" then courseID = 9 end
 end
 
 CreateGUI()
@@ -162,7 +177,9 @@ local courseDescriptions = {
     [4] = "52-65 Wilderness Agility Course", -- Starting location https://imgur.com/a/43kKbVV
     [5] = "65-77 Het's Oasis Agility Course", -- Starting location https://imgur.com/a/hf1tboY
     [6] = "77-85 Hefin Agility Course", -- Starting location https://imgur.com/a/17zAd9a
-    [7] = "85-99+ Advanced Anachronia Agility Course" -- Starting location https://imgur.com/a/qfrsup3
+    [7] = "85-99+ Advanced Anachronia Agility Course", -- Starting location https://imgur.com/a/qfrsup3
+    [8] = "Advanced Gnome Stronghold", -- Starting location https://imgur.com/a/lc6JMk5
+    [9] = "Advanced Barbarian Outpost" --Starting location https://imgur.com/a/0tPR0Zf
 }
 
 local function isPlayerAtCoords(x, y)
@@ -175,22 +192,22 @@ local function isPlayerAtCoords(x, y)
 end
 
 local function crossObstacle(id, destX, destY)
-    if not Read_LoopyLoop() then
-        return 
-    end
-    print("ID: ", id)
-    API.DoAction_Object1(0xb5, API.OFF_ACT_GeneralObject_route0, {id}, 50)    
-    local maxRetries = 40
-    local retries = 0
-    while API.Read_LoopyLoop() and not isPlayerAtCoords(destX, destY) and 
-          API.ReadPlayerAnim() ~= "-1" and API.ReadPlayerAnim() ~= "0" and retries < maxRetries do
+    UpdateStatus(id)
+    if API.Read_LoopyLoop() then    
+        print("ID: ", id)
+        API.DoAction_Object1(0xb5, API.OFF_ACT_GeneralObject_route0, {id}, 50)    
+        local maxRetries = 40
+        local retries = 0
+        while API.Read_LoopyLoop() and not isPlayerAtCoords(destX, destY) and 
+            API.ReadPlayerAnim() ~= "-1" and API.ReadPlayerAnim() ~= "0" and retries < maxRetries do
+            UTILS.randomSleep(500)
+            retries = retries + 1
+        end
+        if retries >= maxRetries then
+            print("Timeout. Passing through.")
+        end
         UTILS.randomSleep(500)
-        retries = retries + 1
     end
-    if retries >= maxRetries then
-        print("Timeout. Passing through.")
-    end
-    UTILS.randomSleep(500)
 end
 
 local function RechargeSilverhawkBoots(minQuantity)
@@ -210,7 +227,10 @@ local function RechargeSilverhawkBoots(minQuantity)
     end
 end
 
-local currentStageDescription = courseDescriptions[courseID]
+local playerInCorrectArea = nil
+local currentWildernessObstacle = 1
+local advancedGnomeObstacle = 1
+local advancedBarbarianObstacle = 1
 local stageFunctions = {
     [1] = function()
         local playerInCorrectArea = nil
@@ -377,19 +397,17 @@ local stageFunctions = {
                 UTILS.randomSleep(500)
             end
         end
-    end,
-    
+    end,   
 
     [4] = function()
-        local playerInCorrectArea = nil
-        local fellIntoTheHole = nil
         local obstacles = {
             {id = 65362, obstacleCoords = {3004, 3938}, finalCoords = {3004, 3950}}, -- obstacle pipe
             {id = 64696, obstacleCoords = {3005, 3952}, finalCoords = {3005, 3958}}, -- ropeswing
             {id = 64699, obstacleCoords = {3001, 3960}, finalCoords = {2996, 3960}}, -- stepping stone
             {id = 64698, obstacleCoords = {3001, 3945}, finalCoords = {2994, 3945}}, -- log balance
-            {id = 65734, obstacleCoords = {2993, 3936}, finalCoords = {2994, 3935}}, -- cliff side
+            {id = 65734, obstacleCoords = {2993, 3936}, finalCoords = {2995, 3935}}, -- cliff side
         }
+
         local function UseAbilityByName(string)    
             local ability = UTILS.getSkillOnBar(string)
             if ability ~= nil then
@@ -401,93 +419,154 @@ local stageFunctions = {
         local function CheckHealth()
             local health = API.GetHPrecent()
             local canEat = UTILS.canUseSkill("Eat Food")
-            if health < 30 and canEat == true then
-                while health < 80 do
+            if health < 50 and canEat == true then
+                while API.Read_LoopyLoop() and health < 80 do
                     UseAbilityByName("Eat Food")
                     UTILS.randomSleep(1000)
                     health = API.GetHPrecent()
                 end
-            elseif health < 30 and canEat == false then
+            elseif health < 50 and canEat == false then
                 print("Low HP and no food or Eat Food not found in ability bar. Exiting script.")
                 API.Write_LoopyLoop(false)
                 return
             end
         end
 
-        if API.PInArea21(2991, 3006, 3931, 3937) then
-            playerInCorrectArea = true          
-        else
-            print("Player is not in the starting area. Move closer to the entrance of the pipe.")
-            print("Starting location https://imgur.com/a/43kKbVV")
-            playerInCorrectArea = false
-            API.Write_LoopyLoop(false)
+        local function FellInHole()
+            if API.PlayerCoord().y > 10000 then
+                return true
+            else
+                return false
+            end
+        end
+
+        local function ExitHole()
+            while API.Read_LoopyLoop() and FellInHole() do
+                API.DoAction_Object1(0x34,API.OFF_ACT_GeneralObject_route0,{32015},50) --Climb ladder
+                UTILS.randomSleep(1000)
+            end
+        end
+        if playerInCorrectArea == nil then
+            if API.PInArea21(2991, 3006, 3931, 3937) then
+                playerInCorrectArea = true          
+            else
+                print("Player is not in the starting area. Move closer to the entrance of the pipe.")
+                print("Starting location https://imgur.com/a/43kKbVV")
+                playerInCorrectArea = false
+                API.Write_LoopyLoop(false)
+            end
         end
         if playerInCorrectArea then
-            CheckHealth()
-            API.DoAction_Object1(0xb5,API.OFF_ACT_GeneralObject_route0,{obstacles[1].id},50)
-            while API.Read_LoopyLoop() and not isPlayerAtCoords(obstacles[1].finalCoords[1], obstacles[1].finalCoords[2]) and API.ReadPlayerAnim() ~= "-1" do
-                UTILS.randomSleep(500)
-            end
-            UTILS.randomSleep(2000)
-            API.DoAction_Object1(0xb5,API.OFF_ACT_GeneralObject_route0,{obstacles[2].id},50)
-            while API.Read_LoopyLoop() and not isPlayerAtCoords(obstacles[2].finalCoords[1], obstacles[2].finalCoords[2]) and API.ReadPlayerAnim() ~= "-1" do
-                UTILS.randomSleep(5000)
-                if isPlayerAtCoords(3004, 3950) then
-                    API.DoAction_Object1(0xb5,API.OFF_ACT_GeneralObject_route0,{obstacles[2].id},50)
-                end
-                if API.PInArea21(2900, 3100, 10250, 10450) then
+            if currentWildernessObstacle == 1 then
+                -- obstacle pipe
+                print("Attempting to overcome obstacle 1 (pipe)...")
+                UTILS.randomSleep(1000)
+                API.DoAction_Object1(0xb5,API.OFF_ACT_GeneralObject_route0,{obstacles[1].id},50)
+                local tries = 0
+                while API.Read_LoopyLoop() and not isPlayerAtCoords(obstacles[1].finalCoords[1], obstacles[1].finalCoords[2]) do
                     UTILS.randomSleep(1000)
-                    API.DoAction_Object1(0x34,API.OFF_ACT_GeneralObject_route0,{32015},50)
-                    while API.Read_LoopyLoop() and not isPlayerAtCoords(3005, 3962) do
-                        UTILS.randomSleep(10000)
+                    if tries > 5 then
+                        API.DoAction_Object1(0xb5,API.OFF_ACT_GeneralObject_route0,{obstacles[1].id},50)
+                        tries = 0
                     end
-                    break
+                    tries = tries + 1  
                 end
-                UTILS.randomSleep(500)
-            end
-            UTILS.randomSleep(2000)
-            API.DoAction_Object1(0xb5,API.OFF_ACT_GeneralObject_route0,{obstacles[3].id},50)
-            while API.Read_LoopyLoop() and not isPlayerAtCoords(obstacles[3].finalCoords[1], obstacles[3].finalCoords[2]) and API.ReadPlayerAnim() ~= "-1" do
-                UTILS.randomSleep(4000)
-                if not API.PInArea21(2996, 3960, 3002, 3960) then
-                    break
-                end
-            end
-            UTILS.randomSleep(2000)
-            API.DoAction_Object1(0xb5, API.OFF_ACT_GeneralObject_route0, {obstacles[4].id}, 50)
-            while API.Read_LoopyLoop() and not isPlayerAtCoords(obstacles[4].finalCoords[1], obstacles[4].finalCoords[2]) and API.ReadPlayerAnim() ~= "-1" do
-                if API.PInArea21(2900, 3100, 10250, 10450) then
-                    fellIntoTheHole = true
-                    UTILS.randomSleep(1000)                    
-                    API.DoAction_Object1(0x34, API.OFF_ACT_GeneralObject_route0, {32015}, 50)
-                    while API.Read_LoopyLoop() and not isPlayerAtCoords(3005, 3962) do
-                        UTILS.randomSleep(10000)
-                    end                    
-                    while API.Read_LoopyLoop() and fellIntoTheHole do
-                        API.DoAction_Object1(0xb5, API.OFF_ACT_GeneralObject_route0, {obstacles[4].id}, 50)
-                        while API.Read_LoopyLoop() and not isPlayerAtCoords(obstacles[4].finalCoords[1], obstacles[4].finalCoords[2]) and API.ReadPlayerAnim() ~= "-1" do
-                            if API.PInArea21(2900, 3100, 10250, 10450) then
-                                UTILS.randomSleep(1000)
-                                API.DoAction_Object1(0x34, API.OFF_ACT_GeneralObject_route0, {32015}, 50)
-                                while API.Read_LoopyLoop() and not isPlayerAtCoords(3005, 3962) do
-                                    UTILS.randomSleep(1000)
-                                end
-                                API.DoAction_Object1(0xb5, API.OFF_ACT_GeneralObject_route0, {obstacles[4].id}, 50)
-                            else
-                                fellIntoTheHole = false
-                            end
-                        end
+                currentWildernessObstacle = 2
+            elseif currentWildernessObstacle == 2 then
+                -- ropeswing
+                print("Attempting to overcome obstacle 2 (ropeswing)...")
+                UTILS.randomSleep(1000)
+                print(obstacles[2].finalCoords[1])
+                print(obstacles[2].finalCoords[2])
+                API.DoAction_Object1(0xb5,API.OFF_ACT_GeneralObject_route0,{obstacles[2].id},50)
+                local tries = 0
+                while API.Read_LoopyLoop() and not isPlayerAtCoords(obstacles[2].finalCoords[1], obstacles[2].finalCoords[2]) do
+                    if FellInHole() then
+                        break
                     end
+                    UTILS.randomSleep(1000)
+                    if tries > 5 then
+                        API.DoAction_Object1(0xb5,API.OFF_ACT_GeneralObject_route0,{obstacles[2].id},50)
+                        tries = 0
+                    end
+                    tries = tries + 1 
                 end
-                UTILS.randomSleep(500)
-            end
+                if FellInHole() then
+                    ExitHole()
+                    while API.Read_LoopyLoop() and not isPlayerAtCoords(3005, 3953) do
+                        API.DoAction_Tile(WPOINT.new(3005,3953,0))
+                        UTILS.randomSleep(1000)
+                    end
+                    return
+                end
+                currentWildernessObstacle = 3
 
-            UTILS.randomSleep(2000)
-            API.DoAction_Object1(0xb5,API.OFF_ACT_GeneralObject_route0,{obstacles[5].id},50)
-            while API.Read_LoopyLoop() and not isPlayerAtCoords(obstacles[5].finalCoords[1], obstacles[5].finalCoords[2]) and API.ReadPlayerAnim() ~= "-1" do
-                UTILS.randomSleep(500)
+            elseif currentWildernessObstacle == 3 then
+                -- stepping stone
+                print("Attempting to overcome obstacle 3 (stepping stone)...")
+                UTILS.randomSleep(1000)
+                API.DoAction_Object1(0xb5,API.OFF_ACT_GeneralObject_route0,{obstacles[3].id},50)
+                local tries = 0
+                while API.Read_LoopyLoop() and not isPlayerAtCoords(obstacles[3].finalCoords[1], obstacles[3].finalCoords[2]) do
+                    if API.PlayerCoord().y > 3960 then
+                        break
+                    end
+                    UTILS.randomSleep(1000)
+                    if tries > 5 then
+                        API.DoAction_Object1(0xb5,API.OFF_ACT_GeneralObject_route0,{obstacles[3].id},50)
+                        tries = 0
+                    end
+                    tries = tries + 1 
+                end
+                if API.PlayerCoord().y > 3960 then
+                    return
+                end
+                
+                currentWildernessObstacle = 4
+
+            elseif currentWildernessObstacle == 4 then
+                -- log balance
+                print("Attempting to overcome obstacle 4 (log balance)...")
+                UTILS.randomSleep(1000)
+                API.DoAction_Object1(0xb5,API.OFF_ACT_GeneralObject_route0,{obstacles[4].id},50)
+                local tries = 0
+                while API.Read_LoopyLoop() and not isPlayerAtCoords(obstacles[4].finalCoords[1], obstacles[4].finalCoords[2]) do
+                    if FellInHole() then
+                        break
+                    end
+                    UTILS.randomSleep(1000)
+                    if tries > 5 then
+                        API.DoAction_Object1(0xb5,API.OFF_ACT_GeneralObject_route0,{obstacles[4].id},50)
+                        tries = 0
+                    end
+                    tries = tries + 1 
+                end
+                if FellInHole() then
+                    ExitHole()
+                    while API.Read_LoopyLoop() and not isPlayerAtCoords(3001, 3946) do
+                        API.DoAction_Tile(WPOINT.new(3001,3946,0))
+                        UTILS.randomSleep(1000)
+                    end
+                    return
+                end
+                currentWildernessObstacle = 5
+
+            elseif currentWildernessObstacle == 5 then
+                -- cliff side
+                print("Attempting to overcome obstacle 5 (cliff side)...")
+                API.DoAction_Object1(0xb5,API.OFF_ACT_GeneralObject_route0,{obstacles[5].id},50)
+                local tries = 0
+                while API.Read_LoopyLoop() and not API.PInArea21(2991, 3006, 3931, 3937) do
+                    UTILS.randomSleep(1000)
+                    if tries > 5 then
+                        API.DoAction_Object1(0xb5,API.OFF_ACT_GeneralObject_route0,{obstacles[5].id},50)
+                        tries = 0
+                    end
+                    tries = tries + 1 
+                end
+                currentWildernessObstacle = 1
             end
-            UTILS.randomSleep(2000)
+            CheckHealth()
         end
     end,
 
@@ -519,21 +598,40 @@ local stageFunctions = {
             playerInCorrectArea = false
             API.Write_LoopyLoop(false)
         end
+
+        local function canSurge()
+            local dive = API.GetABs_name("Surge")
+            if dive.cooldown_timer < 1 and dive.enabled == true then return true
+            else return false end
+        end
+
         if playerInCorrectArea then
             crossObstacle(obstacles[1].id, obstacles[1].finalCoords[1], obstacles[1].finalCoords[2])
             crossObstacle(obstacles[2].id, obstacles[2].finalCoords[1], obstacles[2].finalCoords[2])
             crossObstacle(obstacles[3].id, obstacles[3].finalCoords[1], obstacles[3].finalCoords[2])
             crossObstacle(obstacles[4].id, obstacles[4].finalCoords[1], obstacles[4].finalCoords[2])
+            if canSurge() then UTILS.surge() end
+            UTILS.randomSleep(100)
             crossObstacle(obstacles[5].id, obstacles[5].finalCoords[1], obstacles[5].finalCoords[2])
             crossObstacle(obstacles[6].id, obstacles[6].finalCoords[1], obstacles[6].finalCoords[2])
             crossObstacle(obstacles[7].id, obstacles[7].finalCoords[1], obstacles[7].finalCoords[2])
+            if canSurge() then UTILS.surge() end
+            UTILS.randomSleep(100)
             crossObstacle(obstacles[8].id, obstacles[8].finalCoords[1], obstacles[8].finalCoords[2])
             crossObstacle(obstacles[9].id, obstacles[9].finalCoords[1], obstacles[9].finalCoords[2])
+            if canSurge() then UTILS.surge() end
+            UTILS.randomSleep(100)
             crossObstacle(obstacles[10].id, obstacles[10].finalCoords[1], obstacles[10].finalCoords[2])
+            if canSurge() then UTILS.surge() end
+            UTILS.randomSleep(100)
             crossObstacle(obstacles[11].id, obstacles[11].finalCoords[1], obstacles[11].finalCoords[2])
+            if canSurge() then UTILS.surge() end
+            UTILS.randomSleep(100)
             crossObstacle(obstacles[12].id, obstacles[12].finalCoords[1], obstacles[12].finalCoords[2])
             crossObstacle(obstacles[13].id, obstacles[13].finalCoords[1], obstacles[13].finalCoords[2])
             crossObstacle(obstacles[14].id, obstacles[14].finalCoords[1], obstacles[14].finalCoords[2])
+            if canSurge() then UTILS.surge() end
+            UTILS.randomSleep(100)
             crossObstacle(obstacles[15].id, obstacles[15].finalCoords[1], obstacles[15].finalCoords[2])
             crossObstacle(obstacles[16].id, obstacles[16].finalCoords[1], obstacles[16].finalCoords[2])
         end
@@ -690,6 +788,15 @@ local stageFunctions = {
             {id = 113737, finalCoords = {5426,2387}}, -- 51
             {id = 113738, finalCoords = {5428,2383}}  -- 52
         }
+
+        local function anticipation()
+            local surgeAB = UTILS.getSkillOnBar("Anticipation")
+            if surgeAB ~= nil then
+              return API.DoAction_Ability_Direct(surgeAB, 1, API.OFF_ACT_GeneralInterface_route)
+            end
+            return false
+        end
+
         local function canDive()
             local dive = API.GetABs_name("Dive")
             if dive.cooldown_timer < 1 and dive.enabled == true then return true
@@ -714,7 +821,7 @@ local stageFunctions = {
         end
 
         local function sleepUntilFacing(targetOrientation)
-            if not Read_LoopyLoop() then
+            if not API.Read_LoopyLoop() then
                 return 
             end
             local tolerance = 0.01
@@ -781,6 +888,7 @@ local stageFunctions = {
             UTILS.randomSleep(2000)
             if canDive() then dive(2433 + math.random(-1, 1), 2216 + math.random(-1, 1)) end
             crossObstacle(obstacles[9].id, obstacles[9].finalCoords[1], obstacles[9].finalCoords[2])
+            anticipation()
             local x1, y1 = (5451 + math.random(-4, 4)), (2205 + math.random(-4, 4))
             API.DoAction_Tile(WPOINT.new(x1, y1, 0))
             UTILS.randomSleep(1500)
@@ -828,6 +936,7 @@ local stageFunctions = {
             crossObstacle(obstacles[20].id, obstacles[20].finalCoords[1], obstacles[20].finalCoords[2])
             ----------------------------------------21 to 30----------------------------------------
             crossObstacle(obstacles[21].id, obstacles[21].finalCoords[1], obstacles[21].finalCoords[2])
+            anticipation()
             if canDive() then dive(5605, 2287) end
             API.DoAction_Tile(WPOINT.new(5615 + math.random(-1, 1), 2287 + math.random(-1, 1), 0))
             if API.DeBuffbar_GetIDstatus(14392).found then
@@ -837,7 +946,7 @@ local stageFunctions = {
             end
             API.DoAction_Object1(0xb5,API.OFF_ACT_GeneralObject_route0,{22},50)
             sleepUntilFacing(90)
-            UTILS.randomSleep(1500)
+            UTILS.randomSleep(1500)            
             if canSurge() then UTILS.surge() end
             crossObstacle(obstacles[22].id, obstacles[22].finalCoords[1], obstacles[22].finalCoords[2])
             API.DoAction_Tile(WPOINT.new(5648 + math.random(-1, 1), 2287 + math.random(-1, 1), 0))
@@ -923,6 +1032,254 @@ local stageFunctions = {
             ----------------------------------------------------------------------------------------
         end
 
+    end,
+
+    [8] = function()
+        local obstacles = {
+            {id = 69526, finalCoords = {2474, 3429}}, -- Log balance
+            {id = 69383, finalCoords = {9999, 9999}}, -- Obstacle net
+            {id = 69508, finalCoords = {2473, 3420}}, -- Tree branch
+            {id = 69506, finalCoords = {2472, 3420}}, -- Tree
+            {id = 69514, finalCoords = {2484, 3418}}, -- Signpost
+            {id = 43529, finalCoords = {9999, 9999}}, -- Pole
+            {id = 69389, finalCoords = {2485, 3436}}, -- Barrier
+        }
+        if playerInCorrectArea == nil then
+            if API.PInArea21(2471, 2478, 3436, 3440) then
+                playerInCorrectArea = true
+            else
+                print("Player is not in the starting area. Move to the start of the couse.")
+                print("Starting location https://imgur.com/a/lc6JMk5")
+                playerInCorrectArea = false
+                API.Write_LoopyLoop(false)
+            end
+        end
+        if playerInCorrectArea then
+            if advancedGnomeObstacle == 1 then
+                UTILS.randomSleep(1500)
+                crossObstacle(obstacles[1].id, obstacles[1].finalCoords[1], obstacles[1].finalCoords[2])
+                advancedGnomeObstacle = 2
+            elseif advancedGnomeObstacle == 2 then
+                UpdateStatus(obstacles[2].id)
+                API.DoAction_Object1(0xb5,API.OFF_ACT_GeneralObject_route0,{obstacles[2].id},50)
+                local count = 0
+                while API.Read_LoopyLoop() and API.PlayerCoord().z ~= 1 do
+                    if count > 15 then 
+                        return
+                    end
+                    UTILS.randomSleep(500)
+                    count = count + 1
+                end
+                count = 0
+                advancedGnomeObstacle = 3
+            elseif advancedGnomeObstacle == 3 then
+                UpdateStatus(obstacles[3].id)
+                API.DoAction_Object1(0xb5,API.OFF_ACT_GeneralObject_route0,{ obstacles[3].id },50)
+                local count = 0
+                while API.Read_LoopyLoop() and API.PlayerCoord().z ~= 2 do
+                    if count > 15 then 
+                        return
+                    end
+                    UTILS.randomSleep(500)
+                    count = count + 1
+                end
+                count = 0
+                advancedGnomeObstacle = 4
+            elseif advancedGnomeObstacle == 4 then
+                UpdateStatus(obstacles[4].id)
+                API.DoAction_Object1(0x34,API.OFF_ACT_GeneralObject_route0,{ obstacles[4].id },50)
+                local count = 0
+                while API.Read_LoopyLoop() and API.PlayerCoord().z ~= 3 do
+                    if count > 15 then 
+                        return
+                    end
+                    UTILS.randomSleep(500)
+                    count = count + 1
+                end
+                count = 0
+                advancedGnomeObstacle = 5
+            elseif advancedGnomeObstacle == 5 then
+                crossObstacle(obstacles[5].id, obstacles[5].finalCoords[1], obstacles[5].finalCoords[2])
+                advancedGnomeObstacle = 6
+            elseif advancedGnomeObstacle == 6 then
+                UpdateStatus(obstacles[6].id)
+                API.DoAction_Object1(0xb5,API.OFF_ACT_GeneralObject_route0,{ obstacles[6].id },50)
+                local count = 0
+                while API.Read_LoopyLoop() and API.PlayerCoord().y ~= 3432 do
+                    if count > 15 then 
+                        return
+                    end
+                    UTILS.randomSleep(500)
+                    count = count + 1
+                end
+                count = 0
+                advancedGnomeObstacle = 7
+            elseif advancedGnomeObstacle == 7 then
+                UTILS.randomSleep(1500)
+                crossObstacle(obstacles[7].id, obstacles[7].finalCoords[1], obstacles[7].finalCoords[2])
+                advancedGnomeObstacle = 1
+            end
+        end
+    end,
+
+    [9] = function()
+        local obstacles = {
+            {id = 43526, finalCoords = {9999, 9999}}, -- Rope swing
+            {id = 43595, finalCoords = {2541, 3546}}, -- Log balance
+            {id = 43533, finalCoords = {2538, 3545}}, -- Wall
+            {id = 43597, finalCoords = {2536, 3546}}, -- Wall
+            {id = 43587, finalCoords = {2532, 3553}}, -- Spring device
+            {id = 43527, finalCoords = {2536, 3553}}, -- Balance beam
+            {id = 43531, finalCoords = {2538, 3553}}, -- Gap
+            {id = 43532, finalCoords = {9999, 9999}}, -- Log balance
+            
+        }
+
+        local function FellInHole()
+            if API.PlayerCoord().y > 9000 then
+                return true
+            else
+                return false
+            end
+        end
+
+        local function ExitHole()
+            while API.Read_LoopyLoop() and FellInHole() do
+                API.DoAction_Object1(0x34,API.OFF_ACT_GeneralObject_route0,{ 32015 },50)
+                UTILS.randomSleep(500)
+            end
+        end
+
+        if playerInCorrectArea == nil then
+            if API.PInArea21(2549, 2553, 3554, 3559) then
+                playerInCorrectArea = true
+            else
+                print("Player is not in the starting area. Move to the start of the couse.")
+                print("Starting location https://imgur.com/a/0tPR0Zf")
+                playerInCorrectArea = false
+                API.Write_LoopyLoop(false)
+            end
+        end
+        if playerInCorrectArea then
+            if advancedBarbarianObstacle == 1 then
+                UpdateStatus(obstacles[1].id)
+                UTILS.randomSleep(1000)
+                API.DoAction_Object1(0xb5,API.OFF_ACT_GeneralObject_route0,{ obstacles[1].id },50)
+                local count = 0
+                while API.Read_LoopyLoop() and API.PlayerCoord().y ~= 3549 do
+                    if FellInHole() then 
+                        break
+                    end
+                    if count > 10 then 
+                        return
+                    end
+                    UTILS.randomSleep(500)
+                    count = count + 1
+                end
+                if FellInHole() then
+                    ExitHole()
+                    return
+                end
+                count = 0
+                advancedBarbarianObstacle = 2
+            elseif advancedBarbarianObstacle == 2 then
+                UpdateStatus(obstacles[2].id)
+                UTILS.randomSleep(1000)
+                API.DoAction_Object1(0xb5,API.OFF_ACT_GeneralObject_route0,{ obstacles[2].id },50)
+                local count = 0
+                while API.Read_LoopyLoop() and (not isPlayerAtCoords(obstacles[2].finalCoords[1], obstacles[2].finalCoords[2]) or API.PlayerCoord().y ~= 3546) do
+                    if count > 30 then 
+                        return
+                    end
+                    UTILS.randomSleep(500)
+                    count = count + 1
+                end
+                if API.PlayerCoord().y ~= 3546 then
+                    return
+                end
+                advancedBarbarianObstacle = 3
+            elseif advancedBarbarianObstacle == 3 then
+                UpdateStatus(obstacles[3].id)
+                UTILS.randomSleep(1000)
+                API.DoAction_Object1(0xb5,API.OFF_ACT_GeneralObject_route0,{ obstacles[3].id },50)
+                local count = 0
+                while API.Read_LoopyLoop() and API.PlayerCoord().z ~= 2 do
+                    if count > 15 then 
+                        return
+                    end
+                    UTILS.randomSleep(500)
+                    count = count + 1
+                end
+                advancedBarbarianObstacle = 4
+            elseif advancedBarbarianObstacle == 4 then
+                UpdateStatus(obstacles[4].id)
+                UTILS.randomSleep(1000)
+                API.DoAction_Object1(0xb5,API.OFF_ACT_GeneralObject_route0,{ obstacles[4].id },50)
+                local count = 0
+                while API.Read_LoopyLoop() and API.PlayerCoord().z ~= 3 do
+                    if count > 15 then 
+                        return
+                    end
+                    UTILS.randomSleep(500)
+                    count = count + 1
+                end
+                advancedBarbarianObstacle = 5
+            elseif advancedBarbarianObstacle == 5 then
+                UpdateStatus(obstacles[5].id)
+                UTILS.randomSleep(1000)
+                API.DoAction_Object1(0x9b,API.OFF_ACT_GeneralObject_route0,{ obstacles[5].id },50)
+                local count = 0
+                while API.Read_LoopyLoop() and not isPlayerAtCoords(obstacles[5].finalCoords[1], obstacles[5].finalCoords[2]) do
+                    if count > 15 then 
+                        return
+                    end
+                    UTILS.randomSleep(500)
+                    count = count + 1
+                end
+
+                advancedBarbarianObstacle = 6
+            elseif advancedBarbarianObstacle == 6 then
+                UpdateStatus(obstacles[6].id)
+                UTILS.randomSleep(1000)
+                API.DoAction_Object1(0xb5,API.OFF_ACT_GeneralObject_route0,{ obstacles[6].id },50)
+                local count = 0
+                while API.Read_LoopyLoop() and not isPlayerAtCoords(obstacles[6].finalCoords[1], obstacles[6].finalCoords[2]) do
+                    if count > 15 then 
+                        return
+                    end
+                    UTILS.randomSleep(500)
+                    count = count + 1
+                end
+                advancedBarbarianObstacle = 7
+            elseif advancedBarbarianObstacle == 7 then
+                UpdateStatus(obstacles[7].id)
+                UTILS.randomSleep(1000)
+                API.DoAction_Object1(0xb5,API.OFF_ACT_GeneralObject_route0,{ obstacles[7].id },50)
+                local count = 0
+                while API.Read_LoopyLoop() and not isPlayerAtCoords(obstacles[7].finalCoords[1], obstacles[7].finalCoords[2]) do
+                    if count > 15 then 
+                        return
+                    end
+                    UTILS.randomSleep(500)
+                    count = count + 1
+                end
+
+                advancedBarbarianObstacle = 8
+            elseif advancedBarbarianObstacle == 8 then
+                UpdateStatus(obstacles[8].id)
+                UTILS.randomSleep(1000)
+                API.DoAction_Object1(0x29,API.OFF_ACT_GeneralObject_route0,{ obstacles[8].id },50)
+                local count = 0
+                while API.Read_LoopyLoop() and API.PlayerCoord().z ~= 0 do
+                    if count > 15 then 
+                        return
+                    end
+                    UTILS.randomSleep(500)
+                    count = count + 1
+                end
+                advancedBarbarianObstacle = 1        
+            end
+        end
     end
 }
 
@@ -940,10 +1297,8 @@ Write_fake_mouse_do(false)
 while (API.Read_LoopyLoop()) do
     UTILS:antiIdle()
     GUIDraw()
-    local checkboxValue = GetComponentValue("StartStopCheckbox")
-    if checkboxValue ~= nil then isChecked = checkboxValue end
-    if isChecked then
-        SetCourse()
+    SetCourse()
+    if selectedOption ~= nil and selectedOption ~= "- none -" then        
         RechargeSilverhawkBoots(100)
         executeStage(courseID)        
         UTILS.randomSleep(500)
