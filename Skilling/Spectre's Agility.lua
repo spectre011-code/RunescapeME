@@ -1,6 +1,6 @@
 ScriptName = "AIO Agility"
 Author = "Spectre011"
-ScriptVersion = "1.8"
+ScriptVersion = "1.9"
 ReleaseDate = "06-09-2024"
 Discord = "not_spectre011"
 
@@ -41,6 +41,10 @@ v1.7 - 25-01-2025
 v1.8 - 25-01-2025
     - The script now correctly updates the obstacle ID label when using the Hefin course
     - Changed the hefin banking function to deposit all items instead of loading last preset to prevent getting stuck when you get lamps and stars
+v1.9 - 01-02-2025
+    - Changed the anachronia CrossObstacle functino to CrossObstacleAnac with added debug prints
+    - Added a 150ms sleep to dives and surges
+    - Added WaitForObjectToAppear function before trying to interact with advanced anachronia obstacles
 
 Move to the starting location of the circuit and set the course]]
 
@@ -185,6 +189,38 @@ local courseDescriptions = {
     [9] = "Advanced Barbarian Outpost" --Starting location https://imgur.com/a/0tPR0Zf
 }
 
+local function WaitForObjectToAppear(ObjID, ObjType)
+    print("Starting WaitForObjectToAppear with ObjID:", ObjID, "ObjType:", ObjType)    
+    while API.Read_LoopyLoop() do
+        print("Checking for objects with ID:", ObjID, "Type:", ObjType)
+        local objects = API.GetAllObjArray1({ObjID}, 75, {ObjType})
+        if objects then
+            print("Found", #objects, "objects in the area.")
+            if #objects > 0 then
+                for _, object in ipairs(objects) do
+                    local id = object.Id or 0
+                    local objType = object.Type or 0
+                    print("Checking object - ID:", id, "Type:", objType)
+                    
+                    if id == ObjID and objType == ObjType then
+                        print("Target object found! Returning from function.")
+                        return
+                    end
+                end
+            else
+                print("Objects table is empty.")
+            end
+        else
+            print("No objects found (nil result).")
+        end        
+        print("Waiting for object to appear...")
+        UTILS.randomSleep(100)
+    end    
+    print("Exiting WaitForObjectToAppear (Loop ended)")
+    return true
+end
+
+
 local function isPlayerAtCoords(x, y)
     local coord = API.PlayerCoord()
     if x == coord.x and y == coord.y then
@@ -196,7 +232,8 @@ end
 
 local function crossObstacle(id, destX, destY)
     UpdateStatus(id)
-    if API.Read_LoopyLoop() then    
+    if API.Read_LoopyLoop() then  
+
         print("ID: ", id)
         API.DoAction_Object1(0xb5, API.OFF_ACT_GeneralObject_route0, {id}, 50)    
         local maxRetries = 40
@@ -227,6 +264,28 @@ local function RechargeSilverhawkBoots(minQuantity)
                 return
             end
         end
+    end
+end
+
+local function Surge()
+    if API.Read_LoopyLoop() then
+        local surgeAB = UTILS.getSkillOnBar("Surge")
+        if surgeAB ~= nil then
+            API.DoAction_Ability_Direct(surgeAB, 1, API.OFF_ACT_GeneralInterface_route)
+            UTILS.randomSleep(150)
+        end
+        return false
+    end
+end
+
+local function IsPlayerInArea(x, y, z, radius)
+    local coord = API.PlayerCoord()
+    local dx = math.abs(coord.x - x)
+    local dy = math.abs(coord.y - y)
+    if dx <= radius and dy <= radius and coord.z == z then
+        return true
+    else
+        return false
     end
 end
 
@@ -613,27 +672,27 @@ local stageFunctions = {
             crossObstacle(obstacles[2].id, obstacles[2].finalCoords[1], obstacles[2].finalCoords[2])
             crossObstacle(obstacles[3].id, obstacles[3].finalCoords[1], obstacles[3].finalCoords[2])
             crossObstacle(obstacles[4].id, obstacles[4].finalCoords[1], obstacles[4].finalCoords[2])
-            if canSurge() then UTILS.surge() end
+            if canSurge() then Surge() end
             UTILS.randomSleep(100)
             crossObstacle(obstacles[5].id, obstacles[5].finalCoords[1], obstacles[5].finalCoords[2])
             crossObstacle(obstacles[6].id, obstacles[6].finalCoords[1], obstacles[6].finalCoords[2])
             crossObstacle(obstacles[7].id, obstacles[7].finalCoords[1], obstacles[7].finalCoords[2])
-            if canSurge() then UTILS.surge() end
+            if canSurge() then Surge() end
             UTILS.randomSleep(100)
             crossObstacle(obstacles[8].id, obstacles[8].finalCoords[1], obstacles[8].finalCoords[2])
             crossObstacle(obstacles[9].id, obstacles[9].finalCoords[1], obstacles[9].finalCoords[2])
-            if canSurge() then UTILS.surge() end
+            if canSurge() then Surge() end
             UTILS.randomSleep(100)
             crossObstacle(obstacles[10].id, obstacles[10].finalCoords[1], obstacles[10].finalCoords[2])
-            if canSurge() then UTILS.surge() end
+            if canSurge() then Surge() end
             UTILS.randomSleep(100)
             crossObstacle(obstacles[11].id, obstacles[11].finalCoords[1], obstacles[11].finalCoords[2])
-            if canSurge() then UTILS.surge() end
+            if canSurge() then Surge() end
             UTILS.randomSleep(100)
             crossObstacle(obstacles[12].id, obstacles[12].finalCoords[1], obstacles[12].finalCoords[2])
             crossObstacle(obstacles[13].id, obstacles[13].finalCoords[1], obstacles[13].finalCoords[2])
             crossObstacle(obstacles[14].id, obstacles[14].finalCoords[1], obstacles[14].finalCoords[2])
-            if canSurge() then UTILS.surge() end
+            if canSurge() then Surge() end
             UTILS.randomSleep(100)
             crossObstacle(obstacles[15].id, obstacles[15].finalCoords[1], obstacles[15].finalCoords[2])
             crossObstacle(obstacles[16].id, obstacles[16].finalCoords[1], obstacles[16].finalCoords[2])
@@ -827,13 +886,16 @@ local stageFunctions = {
         end
 
         local function dive(X, Y)
-            local Z = API.PlayerCoord().z
-            local Bdive = API.GetABs_id(30331)
-            local Dive = API.GetABs_id(23714)
-            if (Bdive.id ~= 0 and Bdive.cooldown_timer < 1) or (Dive.id ~= 0 and Dive.cooldown_timer < 1) then
-                if not API.DoAction_BDive_Tile(WPOINT.new(X, Y, Z)) then
-                    API.DoAction_Dive_Tile(WPOINT.new(X, Y, Z))
+            if API.Read_LoopyLoop() then                
+                local Z = API.PlayerCoord().z
+                local Bdive = API.GetABs_id(30331)
+                local Dive = API.GetABs_id(23714)
+                if (Bdive.id ~= 0 and Bdive.cooldown_timer < 1) or (Dive.id ~= 0 and Dive.cooldown_timer < 1) then
+                    if not API.DoAction_BDive_Tile(WPOINT.new(X, Y, Z)) then
+                        API.DoAction_Dive_Tile(WPOINT.new(X, Y, Z))
+                    end
                 end
+                UTILS.randomSleep(150)
             end
         end
 
@@ -857,6 +919,46 @@ local stageFunctions = {
             return
         end
 
+        local function crossObstacleAnac(id, destX, destY)
+            print("Starting crossObstacleAnac with ID:", id, "Destination:", destX, destY)            
+            UpdateStatus(id)            
+            if API.Read_LoopyLoop() then  
+                print("Waiting for object to appear...")
+                WaitForObjectToAppear(id, 12)
+                print("Object appeared. Proceeding with action.")
+        
+                print("Interacting with object. ID:", id)
+                API.DoAction_Object1(0xb5, API.OFF_ACT_GeneralObject_route0, {id}, 50)    
+        
+                local maxRetries = 40
+                local retries = 0
+        
+                print("Checking if player reaches destination:", destX, destY)
+                while API.Read_LoopyLoop() and not isPlayerAtCoords(destX, destY) and 
+                    API.ReadPlayerAnim() ~= "-1" and API.ReadPlayerAnim() ~= "0" and retries < maxRetries do
+                    print("Player not at destination. Retry:", retries + 1, "/", maxRetries)
+                    UTILS.randomSleep(500)
+                    retries = retries + 1
+                    if retries == 25 then
+                        API.DoAction_Object1(0xb5, API.OFF_ACT_GeneralObject_route0, {id}, 50)
+                    end
+                end
+        
+                if retries >= maxRetries then
+                    print("Timeout reached! Player might be stuck.")
+                else
+                    print("Player reached destination or stopped moving.")
+                end
+        
+                print("Sleeping before continuing...")
+                UTILS.randomSleep(500)
+            else
+                print("Loop condition failed, skipping obstacle.")
+            end
+        
+            print("Exiting crossObstacleAnac.")
+        end        
+
         if API.PInArea21(5417, 5419, 2324, 2331) then
             playerInCorrectArea = true        
         else
@@ -868,22 +970,22 @@ local stageFunctions = {
 
         if playerInCorrectArea then
             ----------------------------------------01 to 10----------------------------------------
-            crossObstacle(obstacles[1].id, obstacles[1].finalCoords[1], obstacles[1].finalCoords[2])
-            crossObstacle(obstacles[2].id, obstacles[2].finalCoords[1], obstacles[2].finalCoords[2])
-            crossObstacle(obstacles[3].id, obstacles[3].finalCoords[1], obstacles[3].finalCoords[2])
+            crossObstacleAnac(obstacles[1].id, obstacles[1].finalCoords[1], obstacles[1].finalCoords[2])
+            crossObstacleAnac(obstacles[2].id, obstacles[2].finalCoords[1], obstacles[2].finalCoords[2])
+            crossObstacleAnac(obstacles[3].id, obstacles[3].finalCoords[1], obstacles[3].finalCoords[2])
             if canDive() then dive(5400,2320) end
-            crossObstacle(obstacles[4].id, obstacles[4].finalCoords[1], obstacles[4].finalCoords[2])
+            crossObstacleAnac(obstacles[4].id, obstacles[4].finalCoords[1], obstacles[4].finalCoords[2])
             API.DoAction_Tile(WPOINT.new(5377, 2311,0))
             sleepUntilFacing(225)
-            if canSurge() then UTILS.surge() end
-            crossObstacle(obstacles[5].id, obstacles[5].finalCoords[1], obstacles[5].finalCoords[2])
+            if canSurge() then Surge() end
+            crossObstacleAnac(obstacles[5].id, obstacles[5].finalCoords[1], obstacles[5].finalCoords[2])
             if canDive() then 
                 dive(5359 + math.random(-1, 1), 2296 + math.random(-1, 1)) 
             else
                 API.DoAction_Tile(WPOINT.new(5359 + math.random(-1, 1), 2296 + math.random(-1, 1),0))
                 UTILS.randomSleep(1500)
             end
-            crossObstacle(obstacles[6].id, obstacles[6].finalCoords[1], obstacles[6].finalCoords[2])
+            crossObstacleAnac(obstacles[6].id, obstacles[6].finalCoords[1], obstacles[6].finalCoords[2])
             if canDive() then
                 dive(5376, 2272)                                
             else
@@ -892,67 +994,67 @@ local stageFunctions = {
             end
             API.DoAction_Object1(0xb5,API.OFF_ACT_GeneralObject_route0,{obstacles[7].id},50)
             sleepUntilFacing(180)
-            if canSurge() then UTILS.surge() end            
-            crossObstacle(obstacles[7].id, obstacles[7].finalCoords[1], obstacles[7].finalCoords[2])
+            if canSurge() then Surge() end            
+            crossObstacleAnac(obstacles[7].id, obstacles[7].finalCoords[1], obstacles[7].finalCoords[2])
             API.DoAction_Object1(0xb5,API.OFF_ACT_GeneralObject_route0,{obstacles[8].id},50)
             UTILS.randomSleep(1500)
             if canDive() then dive(5388, 2241) end
-            crossObstacle(obstacles[8].id, obstacles[8].finalCoords[1], obstacles[8].finalCoords[2])
+            crossObstacleAnac(obstacles[8].id, obstacles[8].finalCoords[1], obstacles[8].finalCoords[2])
             API.DoAction_Tile(WPOINT.new(5418, 2231,0))
             sleepUntilFacing(135)
-            if canSurge() then UTILS.surge() end
+            if canSurge() then Surge() end
             API.DoAction_Object1(0xb5,API.OFF_ACT_GeneralObject_route0,{obstacles[9].id},50)
             UTILS.randomSleep(2000)
             if canDive() then dive(2433 + math.random(-1, 1), 2216 + math.random(-1, 1)) end
-            crossObstacle(obstacles[9].id, obstacles[9].finalCoords[1], obstacles[9].finalCoords[2])
+            crossObstacleAnac(obstacles[9].id, obstacles[9].finalCoords[1], obstacles[9].finalCoords[2])
             anticipation()
             local x1, y1 = (5451 + math.random(-4, 4)), (2205 + math.random(-4, 4))
             API.DoAction_Tile(WPOINT.new(x1, y1, 0))
             UTILS.randomSleep(1500)
             sleepUntilFacing(135)
             if canSurge() then
-                UTILS.surge()
+                Surge()
             else
                 while API.Read_LoopyLoop() and not API.PInArea21((x1 - 4), (x1 + 4), (y1 - 4), (y1 + 4))  do
                     UTILS.randomSleep(300) 
                 end
             end
-            crossObstacle(obstacles[10].id, obstacles[10].finalCoords[1], obstacles[10].finalCoords[2])
+            crossObstacleAnac(obstacles[10].id, obstacles[10].finalCoords[1], obstacles[10].finalCoords[2])
             while API.Read_LoopyLoop() and not isPlayerAtCoords(obstacles[10].finalCoords[1], obstacles[10].finalCoords[2]) do
                 if API.DeBuffbar_GetIDstatus(14392).found then
                     print("Stompy")
                     UTILS.randomSleep(4000)
-                    crossObstacle(obstacles[10].id, obstacles[10].finalCoords[1], obstacles[10].finalCoords[2])
+                    crossObstacleAnac(obstacles[10].id, obstacles[10].finalCoords[1], obstacles[10].finalCoords[2])
                 end
                 UTILS.randomSleep(500)            
             end
             ----------------------------------------11 to 20----------------------------------------
             if canDive() then dive(5466, 2171) end
-            crossObstacle(obstacles[11].id, obstacles[11].finalCoords[1], obstacles[11].finalCoords[2])
-            if canSurge() then UTILS.surge() end
-            crossObstacle(obstacles[12].id, obstacles[12].finalCoords[1], obstacles[12].finalCoords[2])
-            crossObstacle(obstacles[13].id, obstacles[13].finalCoords[1], obstacles[13].finalCoords[2])
+            crossObstacleAnac(obstacles[11].id, obstacles[11].finalCoords[1], obstacles[11].finalCoords[2])
+            if canSurge() then Surge() end
+            crossObstacleAnac(obstacles[12].id, obstacles[12].finalCoords[1], obstacles[12].finalCoords[2])
+            crossObstacleAnac(obstacles[13].id, obstacles[13].finalCoords[1], obstacles[13].finalCoords[2])
             if canDive() then dive(5510, 2177) end
             API.DoAction_Object1(0xb5,API.OFF_ACT_GeneralObject_route0,{14},50)
             sleepUntilFacing(90)
-            if canSurge() then UTILS.surge() end
-            crossObstacle(obstacles[14].id, obstacles[14].finalCoords[1], obstacles[14].finalCoords[2])
+            if canSurge() then Surge() end
+            crossObstacleAnac(obstacles[14].id, obstacles[14].finalCoords[1], obstacles[14].finalCoords[2])
             API.DoAction_Tile(WPOINT.new(5542 + math.random(-2, 2), 2193 + math.random(-2, 2), 0))
             sleepUntilFacing(45)
-            if canSurge() then UTILS.surge() end
+            if canSurge() then Surge() end
             if canDive() then dive(5548, 2213) end
-            crossObstacle(obstacles[15].id, obstacles[15].finalCoords[1], obstacles[15].finalCoords[2])
-            if canSurge() then UTILS.surge() end
-            crossObstacle(obstacles[16].id, obstacles[16].finalCoords[1], obstacles[16].finalCoords[2])
-            crossObstacle(obstacles[17].id, obstacles[17].finalCoords[1], obstacles[17].finalCoords[2])
-            if canSurge() then UTILS.surge() end
+            crossObstacleAnac(obstacles[15].id, obstacles[15].finalCoords[1], obstacles[15].finalCoords[2])
+            if canSurge() then Surge() end
+            crossObstacleAnac(obstacles[16].id, obstacles[16].finalCoords[1], obstacles[16].finalCoords[2])
+            crossObstacleAnac(obstacles[17].id, obstacles[17].finalCoords[1], obstacles[17].finalCoords[2])
+            if canSurge() then Surge() end
             if canDive() then dive(5562, 2268) end
-            crossObstacle(obstacles[18].id, obstacles[18].finalCoords[1], obstacles[18].finalCoords[2])
-            crossObstacle(obstacles[19].id, obstacles[19].finalCoords[1], obstacles[19].finalCoords[2])
+            crossObstacleAnac(obstacles[18].id, obstacles[18].finalCoords[1], obstacles[18].finalCoords[2])
+            crossObstacleAnac(obstacles[19].id, obstacles[19].finalCoords[1], obstacles[19].finalCoords[2])
             if canDive() then dive(5580, 2295) end
-            crossObstacle(obstacles[20].id, obstacles[20].finalCoords[1], obstacles[20].finalCoords[2])
+            crossObstacleAnac(obstacles[20].id, obstacles[20].finalCoords[1], obstacles[20].finalCoords[2])
             ----------------------------------------21 to 30----------------------------------------
-            crossObstacle(obstacles[21].id, obstacles[21].finalCoords[1], obstacles[21].finalCoords[2])
+            crossObstacleAnac(obstacles[21].id, obstacles[21].finalCoords[1], obstacles[21].finalCoords[2])
             anticipation()
             if canDive() then dive(5605, 2287) end
             API.DoAction_Tile(WPOINT.new(5615 + math.random(-1, 1), 2287 + math.random(-1, 1), 0))
@@ -964,86 +1066,82 @@ local stageFunctions = {
             API.DoAction_Object1(0xb5,API.OFF_ACT_GeneralObject_route0,{22},50)
             sleepUntilFacing(90)
             UTILS.randomSleep(1500)            
-            if canSurge() then UTILS.surge() end
-            crossObstacle(obstacles[22].id, obstacles[22].finalCoords[1], obstacles[22].finalCoords[2])
+            if canSurge() then Surge() end
+            crossObstacleAnac(obstacles[22].id, obstacles[22].finalCoords[1], obstacles[22].finalCoords[2])
             API.DoAction_Tile(WPOINT.new(5648 + math.random(-1, 1), 2287 + math.random(-1, 1), 0))
             UTILS.randomSleep(1500)
-            if canSurge() then UTILS.surge() end
+            if canSurge() then Surge() end
             if canDive() then dive(5662, 2288) end
-            crossObstacle(obstacles[23].id, obstacles[23].finalCoords[1], obstacles[23].finalCoords[2])
-            crossObstacle(obstacles[24].id, obstacles[24].finalCoords[1], obstacles[24].finalCoords[2])
-            crossObstacle(obstacles[25].id, obstacles[25].finalCoords[1], obstacles[25].finalCoords[2])
+            crossObstacleAnac(obstacles[23].id, obstacles[23].finalCoords[1], obstacles[23].finalCoords[2])
+            crossObstacleAnac(obstacles[24].id, obstacles[24].finalCoords[1], obstacles[24].finalCoords[2])
+            crossObstacleAnac(obstacles[25].id, obstacles[25].finalCoords[1], obstacles[25].finalCoords[2])
             if canDive() then dive(5686, 2302) end
-            crossObstacle(obstacles[26].id, obstacles[26].finalCoords[1], obstacles[26].finalCoords[2])
-            crossObstacle(obstacles[27].id, obstacles[27].finalCoords[1], obstacles[27].finalCoords[2])
+            crossObstacleAnac(obstacles[26].id, obstacles[26].finalCoords[1], obstacles[26].finalCoords[2])
+            crossObstacleAnac(obstacles[27].id, obstacles[27].finalCoords[1], obstacles[27].finalCoords[2])
             API.DoAction_Tile(WPOINT.new(5698 + math.random(-1, 1), 2331 + math.random(-1, 1), 0))
             sleepUntilFacing(0)
-            if canSurge() then UTILS.surge() end
-            crossObstacle(obstacles[28].id, obstacles[28].finalCoords[1], obstacles[28].finalCoords[2])
+            if canSurge() then Surge() end
+            crossObstacleAnac(obstacles[28].id, obstacles[28].finalCoords[1], obstacles[28].finalCoords[2])
             API.DoAction_Tile(WPOINT.new(5696 + math.random(-1, 1), 2356 + math.random(-1, 1), 0))
             UTILS.randomSleep(3000)
             if canDive() then dive(5688, 2361) end
-            crossObstacle(obstacles[29].id, obstacles[29].finalCoords[1], obstacles[29].finalCoords[2])
-            crossObstacle(obstacles[30].id, obstacles[30].finalCoords[1], obstacles[30].finalCoords[2])
+            crossObstacleAnac(obstacles[29].id, obstacles[29].finalCoords[1], obstacles[29].finalCoords[2])
+            crossObstacleAnac(obstacles[30].id, obstacles[30].finalCoords[1], obstacles[30].finalCoords[2])
             ----------------------------------------31 to 40----------------------------------------
             if canDive() then dive(5645 + math.random(-1, 1), 2387 + math.random(-1, 1)) end
             API.DoAction_Object1(0xb5,API.OFF_ACT_GeneralObject_route0,{obstacles[31].id},50)
             UTILS.randomSleep(2000)
-            if canSurge() then UTILS.surge() end
-            crossObstacle(obstacles[31].id, obstacles[31].finalCoords[1], obstacles[31].finalCoords[2])
-            crossObstacle(obstacles[32].id, obstacles[32].finalCoords[1], obstacles[32].finalCoords[2])
-            crossObstacle(obstacles[33].id, obstacles[33].finalCoords[1], obstacles[33].finalCoords[2])
+            if canSurge() then Surge() end
+            crossObstacleAnac(obstacles[31].id, obstacles[31].finalCoords[1], obstacles[31].finalCoords[2])
+            crossObstacleAnac(obstacles[32].id, obstacles[32].finalCoords[1], obstacles[32].finalCoords[2])
+            crossObstacleAnac(obstacles[33].id, obstacles[33].finalCoords[1], obstacles[33].finalCoords[2])
             if canDive() then dive(5632, 2433) end
-            if canSurge() then UTILS.surge() end
+            if canSurge() then Surge() end
             UTILS.randomSleep(300)
-            crossObstacle(obstacles[34].id, obstacles[34].finalCoords[1], obstacles[34].finalCoords[2])
-            crossObstacle(obstacles[35].id, obstacles[35].finalCoords[1], obstacles[35].finalCoords[2])
-            crossObstacle(obstacles[36].id, obstacles[36].finalCoords[1], obstacles[36].finalCoords[2])
-            if canSurge() then UTILS.surge() end
-            crossObstacle(obstacles[37].id, obstacles[37].finalCoords[1], obstacles[37].finalCoords[2])
+            crossObstacleAnac(obstacles[34].id, obstacles[34].finalCoords[1], obstacles[34].finalCoords[2])
+            crossObstacleAnac(obstacles[35].id, obstacles[35].finalCoords[1], obstacles[35].finalCoords[2])
+            crossObstacleAnac(obstacles[36].id, obstacles[36].finalCoords[1], obstacles[36].finalCoords[2])
+            if canSurge() then Surge() end
+            crossObstacleAnac(obstacles[37].id, obstacles[37].finalCoords[1], obstacles[37].finalCoords[2])
             if canDive() then dive(5592 + math.random(-1, 1), 2444 + math.random(-1, 1)) end
-            crossObstacle(obstacles[38].id, obstacles[38].finalCoords[1], obstacles[38].finalCoords[2])
+            crossObstacleAnac(obstacles[38].id, obstacles[38].finalCoords[1], obstacles[38].finalCoords[2])
             if canDive() then dive(5582, 2453) end
-            crossObstacle(obstacles[39].id, obstacles[39].finalCoords[1], obstacles[39].finalCoords[2])
-            crossObstacle(obstacles[40].id, obstacles[40].finalCoords[1], obstacles[40].finalCoords[2])
+            crossObstacleAnac(obstacles[39].id, obstacles[39].finalCoords[1], obstacles[39].finalCoords[2])
+            crossObstacleAnac(obstacles[40].id, obstacles[40].finalCoords[1], obstacles[40].finalCoords[2])
             ----------------------------------------41 to 50----------------------------------------
-            crossObstacle(obstacles[41].id, obstacles[41].finalCoords[1], obstacles[41].finalCoords[2])
+            crossObstacleAnac(obstacles[41].id, obstacles[41].finalCoords[1], obstacles[41].finalCoords[2])
             API.DoAction_Tile(WPOINT.new(5564 + math.random(-1, 1), 2467 + math.random(-1, 1), 0))
             sleepUntilFacing(0)
-            if canSurge() then UTILS.surge() end
+            if canSurge() then Surge() end
             API.DoAction_Tile(WPOINT.new(5558 + math.random(-1, 1), 2480 + math.random(-1, 1), 0))
             UTILS.randomSleep(2000)
             if canDive() then dive(5557 + math.random(-1, 1), 2482 + math.random(-1, 1)) end
-            crossObstacle(obstacles[42].id, obstacles[42].finalCoords[1], obstacles[42].finalCoords[2])
-            crossObstacle(obstacles[43].id, obstacles[43].finalCoords[1], obstacles[43].finalCoords[2])
-            if canSurge() then UTILS.surge() end
+            crossObstacleAnac(obstacles[42].id, obstacles[42].finalCoords[1], obstacles[42].finalCoords[2])
+            crossObstacleAnac(obstacles[43].id, obstacles[43].finalCoords[1], obstacles[43].finalCoords[2])
+            if canSurge() then Surge() end
             API.DoAction_Tile(WPOINT.new(5511 + math.random(-1, 1), 2485 + math.random(-1, 1), 0))
             UTILS.randomSleep(2000)
             if canDive() then dive(5505, 2481) end
-            crossObstacle(obstacles[44].id, obstacles[44].finalCoords[1], obstacles[44].finalCoords[2])
-            if canSurge() then UTILS.surge() end
-            crossObstacle(obstacles[45].id, obstacles[45].finalCoords[1], obstacles[45].finalCoords[2])
-            if canSurge() then UTILS.surge() end
-            crossObstacle(obstacles[46].id, obstacles[46].finalCoords[1], obstacles[46].finalCoords[2])
+            crossObstacleAnac(obstacles[44].id, obstacles[44].finalCoords[1], obstacles[44].finalCoords[2])
+            if canSurge() then Surge() end
+            crossObstacleAnac(obstacles[45].id, obstacles[45].finalCoords[1], obstacles[45].finalCoords[2])
+            if canSurge() then Surge() end
+            crossObstacleAnac(obstacles[46].id, obstacles[46].finalCoords[1], obstacles[46].finalCoords[2])
             if canDive() then dive(5495, 2456) end
-            crossObstacle(obstacles[47].id, obstacles[47].finalCoords[1], obstacles[47].finalCoords[2])
-            if canSurge() then UTILS.surge() end
-            crossObstacle(obstacles[48].id, obstacles[48].finalCoords[1], obstacles[48].finalCoords[2])
+            crossObstacleAnac(obstacles[47].id, obstacles[47].finalCoords[1], obstacles[47].finalCoords[2])
+            if canSurge() then Surge() end
+            crossObstacleAnac(obstacles[48].id, obstacles[48].finalCoords[1], obstacles[48].finalCoords[2])
             UTILS.randomSleep(1000)
-            crossObstacle(obstacles[49].id, obstacles[49].finalCoords[1], obstacles[49].finalCoords[2])
+            crossObstacleAnac(obstacles[49].id, obstacles[49].finalCoords[1], obstacles[49].finalCoords[2])
             if canDive() then dive(5425, 2403) end
-            crossObstacle(obstacles[50].id, obstacles[50].finalCoords[1], obstacles[50].finalCoords[2])
+            crossObstacleAnac(obstacles[50].id, obstacles[50].finalCoords[1], obstacles[50].finalCoords[2])
             ----------------------------------------51 to 52----------------------------------------
-            if canSurge() then UTILS.surge() end
-            crossObstacle(obstacles[51].id, obstacles[51].finalCoords[1], obstacles[51].finalCoords[2])
-            crossObstacle(obstacles[52].id, obstacles[52].finalCoords[1], obstacles[52].finalCoords[2])
+            if canSurge() then Surge() end
+            crossObstacleAnac(obstacles[51].id, obstacles[51].finalCoords[1], obstacles[51].finalCoords[2])
+            crossObstacleAnac(obstacles[52].id, obstacles[52].finalCoords[1], obstacles[52].finalCoords[2])
             ----------------------------------------WalkBack----------------------------------------
-            API.DoAction_Tile(WPOINT.new(5428 + math.random(-1, 1), 2369 + math.random(-1, 1), 0))
-            UTILS.randomSleep(5000)
-            API.DoAction_Tile(WPOINT.new(5418 + math.random(-1, 1), 2355 + math.random(-1, 1), 0))
-            UTILS.randomSleep(7000)
-            API.DoAction_Tile(WPOINT.new(5417, 2325, 0))
-            while API.Read_LoopyLoop() and not isPlayerAtCoords(5417, 2325) do
+            API.DoAction_WalkerW(WPOINT.new(5417, 2325, 0))            
+            while API.Read_LoopyLoop() and not IsPlayerInArea(5417, 2325, 0, 2) do
                 UTILS.randomSleep(500)
             end
             ----------------------------------------------------------------------------------------
