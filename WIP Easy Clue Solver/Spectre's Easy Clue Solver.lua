@@ -298,6 +298,10 @@ local function WaitForDialogThenPressSpacebar()
     API.KeyboardPress31(32, 0, 0)
 end
 
+local function DialogBoxOpen()
+    return API.VB_FindPSett(2874, 1, 0).state == 12
+end
+
 --Opens doors that have a type 0 object when opened but are type 12
 ---@param Obj0ID number
 ---@param Obj0XCoord number
@@ -349,21 +353,21 @@ local function ReqCheck()
     UpdateStatus("Checking requirements")
     --Emotes tab open check
     if API.VB_FindPSettinOrder(3158, 1).state ~= 1 then
-        print("REASON FOR STOPPING: Emotes tab not open.")
+        print("REASON FOR STOPPING: Emotes tab not visible.")
         API.Write_LoopyLoop(false)
         return
     end
 
     --Equipment tab open check
     if not Equipment:IsOpen() then
-        print("REASON FOR STOPPING: Equipment tab not open.")
+        print("REASON FOR STOPPING: Equipment tab not visible.")
         API.Write_LoopyLoop(false)
         return
     end
 
     --Inventory tab open check
     if not Inventory:IsOpen() then
-        print("REASON FOR STOPPING: Inventory tab not open.")
+        print("REASON FOR STOPPING: Inventory tab not visible.")
         API.Write_LoopyLoop(false)
         return
     end
@@ -455,12 +459,32 @@ local clueSteps = {
         end
         UTILS.randomSleep(2000)
     end,
+    [2682] = function()
+        API.DoAction_Inventory1(2682,0,1,API.OFF_ACT_GeneralInterface_route)
+        UTILS.randomSleep(1000)
+        LODESTONES.AL_KHARID.Teleport()
+        MoveTo(3291, 3203, 0, 1)
+        API.DoAction_Object2(0x38,API.OFF_ACT_GeneralObject_route0,{76811},50,WPOINT.new(3289,3202,0))
+        while API.Read_LoopyLoop() and not IsPlayerInArea(3289, 3203, 0, 2) do
+            UTILS.randomSleep(300)
+        end
+        UTILS.randomSleep(2000)
+    end,
     [2683] = function()
         API.DoAction_Inventory1(2683,0,1,API.OFF_ACT_GeneralInterface_route)
         UTILS.randomSleep(1000)
         LODESTONES.AL_KHARID.Teleport()
         WaitForObjectToAppear(541, 1)
         API.DoAction_NPC(0x2c,API.OFF_ACT_InteractNPC_route,{541},50)
+        WaitForDialogThenPressSpacebar()
+    end,
+    [2684] = function()
+        API.DoAction_Inventory1(2684,0,1,API.OFF_ACT_GeneralInterface_route)
+        UTILS.randomSleep(1000)
+        LODESTONES.AL_KHARID.Teleport()
+        MoveTo(3273,3195,0, 1)
+        WaitForObjectToAppear(2824, 1)
+        API.DoAction_NPC(0x2c,API.OFF_ACT_InteractNPC_route2,{2824},50)
         WaitForDialogThenPressSpacebar()
     end,
     [2687] = function()
@@ -526,6 +550,19 @@ local clueSteps = {
         end
         UTILS.randomSleep(2000)
     end,
+    [2691] = function()
+        API.DoAction_Inventory1(2692,0,1,API.OFF_ACT_GeneralInterface_route)
+        UTILS.randomSleep(1000)
+        LODESTONES.FALADOR.Teleport()
+        MoveTo(2975, 3383, 0, 1)
+        API.DoAction_Object2(0x34,API.OFF_ACT_GeneralObject_route0,{11732},50,WPOINT.new(2973,3384,0))
+        while API.Read_LoopyLoop() and not IsPlayerAtZCoords(1) do
+            UTILS.randomSleep(300)
+        end
+        WaitForObjectToAppear(25034, 12)
+        OpenDrawer(25035, 25034)
+        UTILS.randomSleep(2000)
+    end,
     [2692] = function()
         API.DoAction_Inventory1(2692,0,1,API.OFF_ACT_GeneralInterface_route)
         UTILS.randomSleep(1000)
@@ -560,6 +597,15 @@ local clueSteps = {
         MoveTo(3049, 3257, 0, 2)
         WaitForObjectToAppear(734, 1)
         API.DoAction_NPC(0x2c,API.OFF_ACT_InteractNPC_route,{734},50)
+        WaitForDialogThenPressSpacebar()
+    end,
+    [2697] = function()
+        API.DoAction_Inventory1(2697,0,1,API.OFF_ACT_GeneralInterface_route)
+        UTILS.randomSleep(1000)
+        LODESTONES.DRAYNOR_VILLAGE.Teleport()
+        MoveTo(3104, 3257, 0, 1)
+        OpenDoor(1240, 3102, 3257, 1239)
+        API.DoAction_NPC(0x2c,API.OFF_ACT_InteractNPC_route,{918},50)
         WaitForDialogThenPressSpacebar()
     end,
     [2701] = function()
@@ -698,6 +744,8 @@ local clueSteps = {
         end
     end,
     [2709] = function()
+        API.DoAction_Inventory1(2709,0,1,API.OFF_ACT_GeneralInterface_route)
+        UTILS.randomSleep(1000)
         LODESTONES.VARROCK.Teleport()
         API.DoAction_WalkerW(WPOINT.new(3223 + math.random(-1, 1),3452 + math.random(-1, 1),0))
         WaitForObjectToAppear2(46269, 12, WPOINT.new(3226, 3452, 0))
@@ -705,6 +753,26 @@ local clueSteps = {
         while API.Read_LoopyLoop() and not IsPlayerInArea(3225, 3452, 0, 1) do
             UTILS.randomSleep(300)
         end
+    end,
+    [2711] = function()
+        API.DoAction_Inventory1(2711,0,1,API.OFF_ACT_GeneralInterface_route)
+        UTILS.randomSleep(1000)
+        LODESTONES.ARDOUGNE.Teleport()
+        MoveTo(2615,3301, 0, 1)
+        OpenDoor(34820, 2615, 3304, 34819)
+        MoveTo(2613, 3309, 0, 0)
+        API.DoAction_Object2(0x31,API.OFF_ACT_GeneralObject_route0,{34811},50,WPOINT.new(2613,3309,0))
+        UTILS.randomSleep(1500)
+        MoveTo(2611, 3308, 0, 0)
+        API.DoAction_Object2(0x31,API.OFF_ACT_GeneralObject_route0,{34811},50,WPOINT.new(2611,3307,0))
+        UTILS.randomSleep(1500)
+        API.DoAction_Object1(0x34,API.OFF_ACT_GeneralObject_route0,{34548},50)
+        while API.Read_LoopyLoop() and not IsPlayerAtZCoords(1) do
+            UTILS.randomSleep(300)
+        end
+        WaitForObjectToAppear(34585, 12)
+        API.DoAction_Object2(0x38,API.OFF_ACT_GeneralObject_route0,{34585},50,WPOINT.new(2612,3306,0))
+        UTILS.randomSleep(2000)
     end,
     [2712] = function()
         API.DoAction_Inventory1(2712,0,1,API.OFF_ACT_GeneralInterface_route)
@@ -851,6 +919,8 @@ local clueSteps = {
         UTILS.randomSleep(2000) 
     end,
     [3497] = function()
+        API.DoAction_Inventory1(3497,0,1,API.OFF_ACT_GeneralInterface_route)
+        UTILS.randomSleep(1000)
         LODESTONES.FALADOR.Teleport()
         API.DoAction_WalkerW(WPOINT.new(2967 + math.random(-1, 1),3382 + math.random(-1, 1),0))
         while API.Read_LoopyLoop() and not IsPlayerInArea(2967, 3382, 0, 3) do
@@ -882,6 +952,17 @@ local clueSteps = {
         while API.Read_LoopyLoop() and not IsPlayerInArea(3040, 3364, 1, 2) do
             UTILS.randomSleep(300)
         end
+    end,
+    [3498] = function()
+        API.DoAction_Inventory1(3498,0,1,API.OFF_ACT_GeneralInterface_route)
+        UTILS.randomSleep(1000)
+        LODESTONES.FALADOR.Teleport()
+        MoveTo(3059, 3336, 0, 1)
+        API.DoAction_Object2(0x38,API.OFF_ACT_GeneralObject_route0,{11745},50,WPOINT.new(3060,3334,0))
+        while API.Read_LoopyLoop() and not IsPlayerInArea(3059, 3334, 0, 1) do
+            UTILS.randomSleep(300)
+        end
+
     end,
     [3499] = function()
         API.DoAction_Inventory1(3499,0,1,API.OFF_ACT_GeneralInterface_route)
@@ -924,7 +1005,24 @@ local clueSteps = {
         end
         UTILS.randomSleep(2000)
     end,
+    [3513] = function()
+        API.DoAction_Inventory1(3513,0,1,API.OFF_ACT_GeneralInterface_route)
+        UTILS.randomSleep(1000)
+        LODESTONES.SEERS_VILLAGE.Teleport()
+        MoveTo(2741, 3554, 0, 1)
+        OpenDoor(26132, 2741, 3556, 26130)
+        MoveTo(2741, 3571, 0, 1)
+        API.DoAction_Object2(0x31,API.OFF_ACT_GeneralObject_route0,{25750},50,WPOINT.new(2741,3572,0))
+        UTILS.randomSleep(2000)
+        MoveTo(2736, 3580, 0, 0)
+        API.DoAction_Object2(0x31,API.OFF_ACT_GeneralObject_route0,{25718},50,WPOINT.new(2735,3580,0))
+        UTILS.randomSleep(2000)
+        API.DoAction_NPC(0x2c,API.OFF_ACT_InteractNPC_route,{809},50)
+        WaitForDialogThenPressSpacebar()
+    end,
     [3514] = function()
+        API.DoAction_Inventory1(3514,0,1,API.OFF_ACT_GeneralInterface_route)
+        UTILS.randomSleep(1000)
         LODESTONES.AL_KHARID.Teleport()
         API.DoAction_WalkerW(WPOINT.new(3372 + math.random(-1, 1),3269 + math.random(-1, 1),0))
         while API.Read_LoopyLoop() and not IsPlayerInArea(3372, 3269, 0, 3) do
@@ -989,6 +1087,32 @@ local clueSteps = {
             UTILS.randomSleep(3000)
         end
         API.DoAction_Inventory2({952},0,1,API.OFF_ACT_GeneralInterface_route) --Dig spade
+    end,
+    [10180] = function()
+        API.DoAction_Inventory1(10180,0,1,API.OFF_ACT_GeneralInterface_route)
+        UTILS.randomSleep(1000)
+        LODESTONES.LUMBRIDGE.Teleport()
+        MoveTo(3200, 3169, 0, 1)
+        API.DoAction_Object2(0x31,API.OFF_ACT_GeneralObject_route0,{118020},50,WPOINT.new(3201,3169,0))
+        while API.Read_LoopyLoop() and not IsPlayerAtCoords(3202, 3169, 0) do
+            if DialogBoxOpen() then
+                API.TypeOnkeyboard("2")
+            end
+            UTILS.randomSleep(1000)
+        end
+        API.DoAction_Object1(0x29,API.OFF_ACT_GeneralObject_route0,{110455},50)
+        while API.Read_LoopyLoop() and not Inventory:Contains(1205) and not Inventory:Contains(1153) and not Inventory:Contains(1635) do
+            UTILS.randomSleep(300)
+        end
+        EquipStuff(1205, 1153, 1635)
+        API.DoAction_Interface(0xffffffff,0xffffffff,1,590,11,12,API.OFF_ACT_GeneralInterface_route) --Dance
+        WaitForObjectToAppear(5141, 1)
+        API.DoAction_NPC(0x2c,API.OFF_ACT_InteractNPC_route,{5141},50) -- Talk to Uri
+        WaitForDialogThenPressSpacebar()
+        API.DoAction_Object1(0x29,API.OFF_ACT_GeneralObject_route0,{110454},50)
+        while API.Read_LoopyLoop() and Equipment:Contains(1205) and Equipment:Contains(1153) and Equipment:Contains(1635) do
+            UTILS.randomSleep(300)
+        end        
     end,
     [10182] = function()
         API.DoAction_Inventory1(10182,0,1,API.OFF_ACT_GeneralInterface_route)
@@ -1149,6 +1273,30 @@ local clueSteps = {
             UTILS.randomSleep(300)
         end
     end,
+    [10198] = function()
+        API.DoAction_Inventory1(10198,0,1,API.OFF_ACT_GeneralInterface_route)
+        UTILS.randomSleep(1000)
+        LODESTONES.DRAYNOR_VILLAGE.Teleport()
+        MoveTo(3166, 3300, 0, 2)
+        API.DoAction_Object1(0x29,API.OFF_ACT_GeneralObject_route0,{110519},50)
+        while API.Read_LoopyLoop() and not Inventory:Contains(1656) and not Inventory:Contains(10067) and not Inventory:Contains(843) do
+            UTILS.randomSleep(300)
+        end
+        EquipStuff(1656, 10067, 843)
+        MoveTo(3166, 3295, 0, 1)
+        API.DoAction_Object2(0x31,API.OFF_ACT_GeneralObject_route0,{45212},50,WPOINT.new(3164,3294,0))
+        UTILS.randomSleep(2000) 
+        MoveTo(3158, 3298, 0, 0)
+        API.DoAction_Interface(0xffffffff,0xffffffff,1,590,11,4,API.OFF_ACT_GeneralInterface_route) --Think Emote
+        WaitForObjectToAppear(5141, 1)
+        API.DoAction_NPC(0x2c,API.OFF_ACT_InteractNPC_route,{5141},50) -- Talk to Uri
+        WaitForDialogThenPressSpacebar()
+        MoveTo(3166, 3301, 0, 0)
+        API.DoAction_Object1(0x29,API.OFF_ACT_GeneralObject_route0,{110518},50)
+        while API.Read_LoopyLoop() and Equipment:Contains(1656) and Equipment:Contains(10067) and Equipment:Contains(843) do
+            UTILS.randomSleep(300)
+        end
+    end,
     [10204] = function()
         API.DoAction_Inventory1(10204,0,1,API.OFF_ACT_GeneralInterface_route)
         UTILS.randomSleep(1000)
@@ -1249,6 +1397,29 @@ local clueSteps = {
         while API.Read_LoopyLoop() and GetIdFromEquip(0) == 45458 and GetIdFromEquip(4) == 45462 and GetIdFromEquip(6) == 1081 do
             UTILS.randomSleep(300)
         end
+    end,
+    [10212] = function()
+        API.DoAction_Inventory1(10212,0,1,API.OFF_ACT_GeneralInterface_route)
+        UTILS.randomSleep(1000)
+        LODESTONES.BURTHOPE.Teleport()
+        MoveTo(2896, 3566, 0, 1)
+        API.DoAction_Object2(0x39,API.OFF_ACT_GeneralObject_route0,{66973},50,WPOINT.new(2893,3570,0))
+        while API.Read_LoopyLoop() and #API.GetAllObjArray1({66973}, 50, {12}) > 0 do
+            if DialogBoxOpen() then
+                API.TypeOnkeyboard("1")
+            end
+            UTILS.randomSleep(300)
+        end
+        WaitForObjectToAppear(4629, 12)
+        OpenDoor(4630, 2207, 4943, 4629)
+        API.DoAction_Object2(0x31,API.OFF_ACT_GeneralObject_route0,{4629},50,WPOINT.new(2208,4946,0))
+        UTILS.randomSleep(3000)
+        MoveTo(2208, 4950, 0, 1)
+        API.DoAction_Interface(0xffffffff,0xffffffff,1,590,11,7,API.OFF_ACT_GeneralInterface_route) --Cheer
+        WaitForObjectToAppear(5141, 1)
+        API.DoAction_NPC(0x2c,API.OFF_ACT_InteractNPC_route,{5141},50) -- Talk to Uri
+        WaitForDialogThenPressSpacebar()
+
     end,
     [10214] = function()
         API.DoAction_Inventory1(10214,0,1,API.OFF_ACT_GeneralInterface_route)
@@ -1362,7 +1533,44 @@ local clueSteps = {
             UTILS.randomSleep(300)
         end
     end,
+    [10222] = function()
+        API.DoAction_Inventory1(10222,0,1,API.OFF_ACT_GeneralInterface_route)
+        UTILS.randomSleep(1000)
+        LODESTONES.ARDOUGNE.Teleport()
+        MoveTo(2753,3403,0, 3)
+        WaitForObjectToAppear(110379, 0)
+        API.DoAction_Object1(0x29,API.OFF_ACT_GeneralObject_route0,{110379},50)
+        while API.Read_LoopyLoop() and not Inventory:Contains(1115) and not Inventory:Contains(1169) and not Inventory:Contains(1059) do
+            UTILS.randomSleep(300)
+        end
+        MoveTo(2761, 3401, 0, 1)
+        EquipStuff(1115, 1169, 1059)
+        API.DoAction_Interface(0xffffffff,0xffffffff,1,590,11,19,API.OFF_ACT_GeneralInterface_route) -- Raspberry emote
+        WaitForObjectToAppear(5141, 1)
+        API.DoAction_NPC(0x2c,API.OFF_ACT_InteractNPC_route,{5141},50) -- Talk to Uri
+        WaitForDialogThenPressSpacebar()
+        API.DoAction_Object1(0x29,API.OFF_ACT_GeneralObject_route0,{110378},50) -- Deposit items in hidey hole
+        while API.Read_LoopyLoop() and GetIdFromEquip(4) == 1115 and GetIdFromEquip(0) == 1169 and GetIdFromEquip(7) == 1059 do
+            UTILS.randomSleep(300)
+        end
+    end,
+    [10224] = function()
+        API.DoAction_Inventory1(10224,0,1,API.OFF_ACT_GeneralInterface_route)
+        UTILS.randomSleep(1000)
+        API.DoAction_Inventory1(50558,0,1,API.OFF_ACT_GeneralInterface_route) --Khazard teleport
+        while API.Read_LoopyLoop() and not IsPlayerInArea(2637, 3167, 0, 20) do
+            UTILS.randomSleep(300)
+        end
+        UTILS.randomSleep(300)
+        MoveTo(2676, 3166, 0, 1)
+        API.DoAction_Interface(0xffffffff,0xffffffff,1,590,11,18,API.OFF_ACT_GeneralInterface_route) --Panic emote
+        WaitForObjectToAppear(5141, 1)
+        API.DoAction_NPC(0x2c,API.OFF_ACT_InteractNPC_route,{5141},50) -- Talk to Uri
+        WaitForDialogThenPressSpacebar()
+    end,
     [10228] = function()
+        API.DoAction_Inventory1(10228,0,1,API.OFF_ACT_GeneralInterface_route)
+        UTILS.randomSleep(1000)
         API.DoAction_Inventory1(49429,0,7,API.OFF_ACT_GeneralInterface_route2) --Archaeology journal teleport
         while API.Read_LoopyLoop() and not IsPlayerInArea(3336, 3378, 0, 3) do
             UTILS.randomSleep(300)
@@ -1395,6 +1603,47 @@ local clueSteps = {
             UTILS.randomSleep(300)
         end
     end,
+    [10230] = function()
+        API.DoAction_Inventory1(10230,0,1,API.OFF_ACT_GeneralInterface_route)
+        UTILS.randomSleep(1000)
+        LODESTONES.FORT_FORINTHRY.Teleport()
+        API.DoAction_Object1(0x29,API.OFF_ACT_GeneralObject_route0,{110523},50) -- Take items from hidey hole
+        while API.Read_LoopyLoop() and not Inventory:Contains(1351) and not Inventory:Contains(1095) and not Inventory:Contains(1131) do
+            UTILS.randomSleep(300)
+        end
+        EquipStuff(1351, 1095, 1131)
+        API.DoAction_Interface(0xffffffff,0xffffffff,1,590,11,16,API.OFF_ACT_GeneralInterface_route) -- Cry emote
+        WaitForObjectToAppear(5141, 1)
+        API.DoAction_NPC(0x2c,API.OFF_ACT_InteractNPC_route,{5141},50) -- Talk to Uri
+        WaitForDialogThenPressSpacebar()
+        API.DoAction_Object1(0x29,API.OFF_ACT_GeneralObject_route0,{110522},50) -- Deposit items in hidey hole
+        while API.Read_LoopyLoop() and GetIdFromEquip(3) == 1351 and GetIdFromEquip(6) == 1095 and GetIdFromEquip(4) == 1131 do
+            UTILS.randomSleep(300)
+        end
+    end,
+    [33265] = function()
+        API.DoAction_Inventory1(33265,0,1,API.OFF_ACT_GeneralInterface_route)
+        UTILS.randomSleep(1000)
+        LODESTONES.LUMBRIDGE.Teleport()
+        MoveTo(3192, 3260, 0, 2)
+        WaitForObjectToAppear(79065, 12)
+        API.DoAction_Object2(0x38,API.OFF_ACT_GeneralObject_route0,{79065},50,WPOINT.new(3191,3257,0))
+        while API.Read_LoopyLoop() and not IsPlayerInArea(3191, 3258, 0, 2) do
+            UTILS.randomSleep(300)
+        end
+        UTILS.randomSleep(2000)
+    end,
+    [33268] = function()
+        API.DoAction_Inventory1(33268,0,1,API.OFF_ACT_GeneralInterface_route)
+        UTILS.randomSleep(1000)
+        LODESTONES.AL_KHARID.Teleport()
+        MoveTo(3418, 3160, 0, 1)
+        API.DoAction_Object2(0x38,API.OFF_ACT_GeneralObject_route0,{63760},50,WPOINT.new(3415,3158,0))
+        while API.Read_LoopyLoop() and not IsPlayerInArea(3416, 3158, 0, 1) do
+            UTILS.randomSleep(300)
+        end
+        UTILS.randomSleep(2000)
+    end,
 }
 
 local function getClueStepId()
@@ -1411,10 +1660,9 @@ local function getClueStepId()
         API.DoAction_Inventory1(UnopenedClue, 0, 1, API.OFF_ACT_GeneralInterface_route) -- Open clue
         while API.Read_LoopyLoop() and SlotData.id == UnopenedClue do
             UTILS.randomSleep(300)
-            SlotData = Inventory:GetSlotData(0) -- Update SlotData
+            SlotData = Inventory:GetSlotData(0)
             if not SlotData then
-                UpdateStatus("SlotData became nil while waiting. Exiting in 3 seconds")
-                UTILS.randomSleep(3000)
+                print("SlotData became nil while waiting. Exiting.")
                 API.Write_LoopyLoop(false)
                 return nil
             end
@@ -1422,7 +1670,6 @@ local function getClueStepId()
     end
     print("ItemID2: ".. SlotData.id)
 
-    -- Update status and return the clue step ID
     UpdateStatus("Solving step " .. SlotData.id)
     return SlotData.id
 end
@@ -1431,8 +1678,9 @@ local clueStepId = 0
 
 Write_fake_mouse_do(false)
 while (API.Read_LoopyLoop()) do
+    UTILS:antiIdle()
     ReqCheck()
-    clueStepId = getClueStepId()    
+    clueStepId = getClueStepId()
     clueSteps[clueStepId]()
     UTILS.randomSleep(3000)
     collectgarbage("collect")
