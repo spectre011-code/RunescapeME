@@ -9,6 +9,7 @@ Changelog:
 v1.0 - 03-02-2025
     - Initial release.
 ]]
+--Preset: https://imgur.com/a/BGUqXg5
 
 local API = require("api")
 local UTILS = require("utils")
