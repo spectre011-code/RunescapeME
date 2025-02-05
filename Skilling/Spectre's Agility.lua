@@ -1,6 +1,6 @@
 ScriptName = "AIO Agility"
 Author = "Spectre011"
-ScriptVersion = "1.9"
+ScriptVersion = "1.10"
 ReleaseDate = "06-09-2024"
 Discord = "not_spectre011"
 
@@ -45,6 +45,10 @@ v1.9 - 01-02-2025
     - Changed the anachronia CrossObstacle functino to CrossObstacleAnac with added debug prints
     - Added a 150ms sleep to dives and surges
     - Added WaitForObjectToAppear function before trying to interact with advanced anachronia obstacles
+v1.10 - 05-02-2025
+    - Fixed a bug with the Northern Anachronia circuit where the script would not sleep enough for the cave animation before proceeding to the next last_obstacle_id
+    - Added a AnacResources() function to check for compacted resources
+    - Added xp meter
 
 Move to the starting location of the circuit and set the course]]
 
@@ -289,6 +293,19 @@ local function IsPlayerInArea(x, y, z, radius)
     end
 end
 
+local function AnacResources()
+    if API.Read_LoopyLoop() then
+        print("Checking for Anac Resources...")
+        if Inventory:ContainsAny({47932, 47933, 47934, 47935, 47936, 47937}) then
+            print("Anac Resources found.")
+        end    
+        while API.Read_LoopyLoop() and Inventory:ContainsAny({47932, 47933, 47934, 47935, 47936, 47937}) do
+            API.DoAction_Inventory2({47932, 47933, 47934, 47935, 47936, 47937}, 0, 1, API.OFF_ACT_GeneralInterface_route)
+            UTILS.randomSleep(500)
+        end
+    end
+end
+
 local playerInCorrectArea = nil
 local currentWildernessObstacle = 1
 local advancedGnomeObstacle = 1
@@ -348,12 +365,14 @@ local stageFunctions = {
             crossObstacle(obstacles[3].id, obstacles[3].finalGoingCoords[1], obstacles[3].finalGoingCoords[2])
             crossObstacle(obstacles[4].id, obstacles[4].finalGoingCoords[1], obstacles[4].finalGoingCoords[2])
             crossObstacle(obstacles[5].id, obstacles[5].finalGoingCoords[1], obstacles[5].finalGoingCoords[2])
+            UTILS.randomSleep(1000) --Necessary because of fade animation
             crossObstacle(obstacles[6].id, obstacles[6].finalGoingCoords[1], obstacles[6].finalGoingCoords[2])
             going = false
         end
         if playerInCorrectArea and not going then
             crossObstacle(obstacles[6].id, obstacles[6].finalBackingCoords[1], obstacles[6].finalBackingCoords[2])
             crossObstacle(obstacles[5].id, obstacles[5].finalBackingCoords[1], obstacles[5].finalBackingCoords[2])
+            UTILS.randomSleep(1000) --Necessary because of fade animation
             crossObstacle(obstacles[4].id, obstacles[4].finalBackingCoords[1], obstacles[4].finalBackingCoords[2])
             crossObstacle(obstacles[3].id, obstacles[3].finalBackingCoords[1], obstacles[3].finalBackingCoords[2])
             crossObstacle(obstacles[2].id, obstacles[2].finalBackingCoords[1], obstacles[2].finalBackingCoords[2])
@@ -1406,6 +1425,9 @@ local function executeStage(stageID)
     end
 end
 
+API.SetDrawTrackedSkills(true)
+API.ScriptRuntimeString()
+API.GetTrackedSkills()
 
 API.Write_LoopyLoop(true)
 Write_fake_mouse_do(false)
@@ -1413,10 +1435,11 @@ while (API.Read_LoopyLoop()) do
     UTILS:antiIdle()
     GUIDraw()
     SetCourse()
-    if selectedOption ~= nil and selectedOption ~= "- none -" then        
+    if selectedOption ~= nil and selectedOption ~= "- none -" then
         RechargeSilverhawkBoots(100)
-        executeStage(courseID)        
+        executeStage(courseID)
         UTILS.randomSleep(500)
+        AnacResources()
     end
     print("Memory usage: ", collectgarbage("count"), "KB")
     collectgarbage("collect")
