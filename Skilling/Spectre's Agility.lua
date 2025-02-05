@@ -46,7 +46,7 @@ v1.9 - 01-02-2025
     - Added a 150ms sleep to dives and surges
     - Added WaitForObjectToAppear function before trying to interact with advanced anachronia obstacles
 v1.10 - 05-02-2025
-    - Fixed a bug with the Northern Anachronia circuit where the script would not sleep enough for the cave animation before proceeding to the next last_obstacle_id
+    - Fixed a bug with the Northern Anachronia circuit where the script would not sleep enough for the cave animation before proceeding to the next obstacle
     - Added a AnacResources() function to check for compacted resources
     - Added xp meter
 
