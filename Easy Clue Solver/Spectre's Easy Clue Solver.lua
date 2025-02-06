@@ -1,6 +1,6 @@
 ScriptName = "Easy Clue Solver"
 Author = "Spectre011"
-ScriptVersion = "1.0"
+ScriptVersion = "1.1"
 ReleaseDate = "06-02-2025"
 Discord = "not_spectre011"
 --PRESET: https://imgur.com/a/fAnUAng
@@ -9,6 +9,8 @@ Discord = "not_spectre011"
 Changelog:
 v1.0 - 06-02-2025
     - Initial release.
+v1.1 - 06-02-2025
+    - Fixed Seed pod ID on ReqCheck() function.
 ]]
 
 local API = require("api")
@@ -394,7 +396,7 @@ local function ReqCheck()
     end
 
     --Grand seed pod check
-    if not Inventory:Contains(50558) then
+    if not Inventory:Contains(9469) then
         print("REASON FOR STOPPING: Grand seed pod not found in inventory.")
         ReasonForStopping = "Grand seed pod not found in inventory."
         API.Write_LoopyLoop(false)
