@@ -12,7 +12,7 @@ v1.0 - 06-02-2025
 v1.1 - 06-02-2025
     - Fixed Seed pod ID on ReqCheck() function.
 v1.2 - 08-02-2025
-    - Fixed step 2703, it was not checking for the correct Z coordinate to finish the step, causing the scritp to get never proceed
+    -  Fixed step 2703, it was not checking for the correct Z coordinate to finish the step, causing the script to freeze
 ]]
 
 local API = require("api")
