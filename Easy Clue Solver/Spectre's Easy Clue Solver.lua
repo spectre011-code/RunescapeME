@@ -12,7 +12,7 @@ v1.0 - 06-02-2025
 v1.1 - 06-02-2025
     - Fixed Seed pod ID on ReqCheck() function.
 v1.2 - 08-02-2025
-    -  Fixed step 2703, it was not checking for the correct Z coordinate to finish the step, causing the script to freeze
+    - Fixed step 2703, it was not checking for the correct Z coordinate to finish the step, causing the script to freeze
 ]]
 
 local API = require("api")
@@ -2326,8 +2326,8 @@ local clueStepId = 0
 Write_fake_mouse_do(false)
 while (API.Read_LoopyLoop()) do
     UTILS:antiIdle()
-    --ReqCheck()
-    clueStepId = 2703 --getClueStepId()
+    ReqCheck()
+    clueStepId = getClueStepId()
     if clueStepId == nil then
         ReasonForStopping = "No item found in first slot."
         API.Write_LoopyLoop(false)
