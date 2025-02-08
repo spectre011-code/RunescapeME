@@ -1,6 +1,6 @@
 ScriptName = "Easy Clue Solver"
 Author = "Spectre011"
-ScriptVersion = "1.1"
+ScriptVersion = "1.2"
 ReleaseDate = "06-02-2025"
 Discord = "not_spectre011"
 --PRESET: https://imgur.com/a/fAnUAng
@@ -11,6 +11,8 @@ v1.0 - 06-02-2025
     - Initial release.
 v1.1 - 06-02-2025
     - Fixed Seed pod ID on ReqCheck() function.
+v1.2 - 08-02-2025
+    - Fixed step 2703, it was not checking for the correct Z coordinate to finish the step, causing the scritp to get never proceed
 ]]
 
 local API = require("api")
@@ -827,7 +829,7 @@ local clueSteps = {
         if not API.DoAction_Object2(0x31,API.OFF_ACT_GeneralObject_route0,{25592},50,WPOINT.new(2748,3495,0)) then  --Open closed Chest
             API.DoAction_Object2(0x38,API.OFF_ACT_GeneralObject_route1,{25593},50,WPOINT.new(2748,3495,0)) --Search opened chest
         end
-        while API.Read_LoopyLoop() and not IsPlayerInArea(2748, 3494, 0, 1) do
+        while API.Read_LoopyLoop() and not IsPlayerInArea(2748, 3494, 2, 1) do
             UTILS.randomSleep(300)
         end
     end,
@@ -2324,8 +2326,8 @@ local clueStepId = 0
 Write_fake_mouse_do(false)
 while (API.Read_LoopyLoop()) do
     UTILS:antiIdle()
-    ReqCheck()
-    clueStepId = getClueStepId()
+    --ReqCheck()
+    clueStepId = 2703 --getClueStepId()
     if clueStepId == nil then
         ReasonForStopping = "No item found in first slot."
         API.Write_LoopyLoop(false)
