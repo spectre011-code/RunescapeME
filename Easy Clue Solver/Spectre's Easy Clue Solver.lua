@@ -1,6 +1,6 @@
 ScriptName = "Easy Clue Solver"
 Author = "Spectre011"
-ScriptVersion = "1.2"
+ScriptVersion = "1.3"
 ReleaseDate = "06-02-2025"
 Discord = "not_spectre011"
 --PRESET: https://imgur.com/a/fAnUAng
@@ -12,7 +12,9 @@ v1.0 - 06-02-2025
 v1.1 - 06-02-2025
     - Fixed Seed pod ID on ReqCheck() function.
 v1.2 - 08-02-2025
-    - Fixed step 2703, it was not checking for the correct Z coordinate to finish the step, causing the script to freeze
+    - Fixed step 2703, it was not checking for the correct Z coordinate to finish the step, causing the script to freeze.
+v1.3 - 08-02-2025
+    - Fixed step 3505, it was not checking for the correct Z coordinate to finish the step, causing the script to freeze.   
 ]]
 
 local API = require("api")
@@ -1313,7 +1315,7 @@ local clueSteps = {
         UTILS.randomSleep(1000)
         OpenDoor(34813, 2660, 3320, 34811)
         OpenDrawer(34483, 34482)
-        while API.Read_LoopyLoop() and not IsPlayerInArea(2655, 3320, 0, 1) do
+        while API.Read_LoopyLoop() and not IsPlayerInArea(2655, 3322, 1, 1) do
             UTILS.randomSleep(300)
         end
         UTILS.randomSleep(1000)
