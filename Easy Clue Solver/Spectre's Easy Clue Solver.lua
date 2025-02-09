@@ -2344,7 +2344,7 @@ Write_fake_mouse_do(false)
 while (API.Read_LoopyLoop()) do
     UTILS:antiIdle()
     ReqCheck()
-    clueStepId = 10186 getClueStepId()
+    clueStepId = getClueStepId()
     if clueStepId == nil then
         ReasonForStopping = "No item found in first slot."
         API.Write_LoopyLoop(false)
