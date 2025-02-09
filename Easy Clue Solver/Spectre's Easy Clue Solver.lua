@@ -1,6 +1,6 @@
 ScriptName = "Easy Clue Solver"
 Author = "Spectre011"
-ScriptVersion = "1.3"
+ScriptVersion = "1.4"
 ReleaseDate = "06-02-2025"
 Discord = "not_spectre011"
 --PRESET: https://imgur.com/a/fAnUAng
@@ -14,7 +14,10 @@ v1.1 - 06-02-2025
 v1.2 - 08-02-2025
     - Fixed step 2703, it was not checking for the correct Z coordinate to finish the step, causing the script to freeze.
 v1.3 - 08-02-2025
-    - Fixed step 3505, it was not checking for the correct Z coordinate to finish the step, causing the script to freeze.   
+    - Fixed step 3505, it was not checking for the correct Z coordinate to finish the step, causing the script to freeze.
+v1.4 - 08-02-2025
+    - Added the function OpenDrawer2 to specify coordinates.
+    - Changed step 2700 to use OpenDrawer2 instead of OpenDrawer function to prevent the wrong drawer from being opened.
 ]]
 
 local API = require("api")
@@ -353,6 +356,15 @@ local function OpenDrawer(Obj0ID, Obj12ID)
         API.DoAction_Object1(0x31,API.OFF_ACT_GeneralObject_route0,{Obj12ID},50) -- Open drawers
     else
         API.DoAction_Object1(0x38,API.OFF_ACT_GeneralObject_route0,{Obj0ID},50) -- Search drawers
+    end
+end
+
+local function OpenDrawer2(Obj0ID, Obj12ID, X, Y, Z)
+    local drawer = #API.GetAllObjArrayInteract({Obj0ID}, 50, {0})
+    if drawer == 0 then
+        API.DoAction_Object2(0x31,API.OFF_ACT_GeneralObject_route0,{Obj12ID},50,WPOINT.new(X,Y,Z)) -- Open drawers
+    else
+        API.DoAction_Object2(0x38,API.OFF_ACT_GeneralObject_route0,{Obj0ID},50,WPOINT.new(X,Y,Z)) --Search drawers
     end
 end
 
@@ -738,7 +750,7 @@ local clueSteps = {
         UTILS.randomSleep(1000)
         LODESTONES.CATHERBY.Teleport()
         MoveTo(2827, 3455, 0, 1)
-        OpenDrawer(25035, 25034)
+        OpenDrawer2(25035, 25034, 2828,3457,0)
         while API.Read_LoopyLoop() and not IsPlayerInArea(2828, 3456, 0, 1) do
             UTILS.randomSleep(300)
         end
