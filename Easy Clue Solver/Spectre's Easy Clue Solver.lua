@@ -1,7 +1,7 @@
 ScriptName = "Easy Clue Solver"
 Author = "Spectre011"
-ScriptVersion = "1.4"
-ReleaseDate = "06-02-2025"
+ScriptVersion = "1.5"
+ReleaseDate = "09-02-2025"
 Discord = "not_spectre011"
 --PRESET: https://imgur.com/a/fAnUAng
 
@@ -18,6 +18,8 @@ v1.3 - 08-02-2025
 v1.4 - 08-02-2025
     - Added the function OpenDrawer2 to specify coordinates.
     - Changed step 2700 to use OpenDrawer2 instead of OpenDrawer function to prevent the wrong drawer from being opened.
+v1.5 - 09-02-2025
+    - Fixed step 10186, it was not able to consistently reach the location of the step so a middle point was added to help with the pathing.
 ]]
 
 local API = require("api")
@@ -1613,6 +1615,7 @@ local clueSteps = {
             UTILS.randomSleep(300)
         end
         UTILS.randomSleep(2000)
+        MoveTo(3324, 3467, 0, 2)
         MoveTo(3371, 3500, 0, 1)
         WaitForObjectToAppear(110487, 0)
         API.DoAction_Object1(0x29,API.OFF_ACT_GeneralObject_route0,{110487},50) --Take items from hidey hole
@@ -2341,7 +2344,7 @@ Write_fake_mouse_do(false)
 while (API.Read_LoopyLoop()) do
     UTILS:antiIdle()
     ReqCheck()
-    clueStepId = getClueStepId()
+    clueStepId = 10186 getClueStepId()
     if clueStepId == nil then
         ReasonForStopping = "No item found in first slot."
         API.Write_LoopyLoop(false)
