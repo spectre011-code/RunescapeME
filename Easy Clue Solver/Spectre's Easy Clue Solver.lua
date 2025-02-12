@@ -1,6 +1,6 @@
 ScriptName = "Easy Clue Solver"
 Author = "Spectre011"
-ScriptVersion = "1.5"
+ScriptVersion = "1.6"
 ReleaseDate = "09-02-2025"
 Discord = "not_spectre011"
 --PRESET: https://imgur.com/a/fAnUAng
@@ -20,6 +20,8 @@ v1.4 - 08-02-2025
     - Changed step 2700 to use OpenDrawer2 instead of OpenDrawer function to prevent the wrong drawer from being opened.
 v1.5 - 09-02-2025
     - Fixed step 10186, it was not able to consistently reach the location of the step so a middle point was added to help with the pathing.
+v1.6 - 12-02-2025
+    - Fixed step 10198, it was not able to consistently enter or exit the wheat field so a gate check was added.
 ]]
 
 local API = require("api")
@@ -1779,14 +1781,22 @@ local clueSteps = {
             UTILS.randomSleep(300)
         end
         EquipStuff(1656, 10067, 843)
-        MoveTo(3166, 3295, 0, 1)
-        API.DoAction_Object2(0x31,API.OFF_ACT_GeneralObject_route0,{45212},50,WPOINT.new(3164,3294,0))
+        MoveTo(3165, 3295, 0, 0)
+        while API.Read_LoopyLoop() and #API.GetAllObjArray2({45211}, 50, {0}, WPOINT.new(3165, 3295, 0)) < 1 do
+            API.DoAction_Object2(0x31,API.OFF_ACT_GeneralObject_route0,{45212},50,WPOINT.new(3164,3294,0))
+            UTILS.randomSleep(300)
+        end
         UTILS.randomSleep(2000) 
         MoveTo(3158, 3298, 0, 0)
         API.DoAction_Interface(0xffffffff,0xffffffff,1,590,11,4,API.OFF_ACT_GeneralInterface_route) --Think Emote
         WaitForObjectToAppear(5141, 1)
         API.DoAction_NPC(0x2c,API.OFF_ACT_InteractNPC_route,{5141},50) -- Talk to Uri
         WaitForDialogThenPressSpacebar()
+        MoveTo(3163, 3295, 0, 0)
+        while API.Read_LoopyLoop() and #API.GetAllObjArray2({45211}, 50, {0}, WPOINT.new(3165, 3295, 0)) < 1 do
+            API.DoAction_Object2(0x31,API.OFF_ACT_GeneralObject_route0,{45212},50,WPOINT.new(3164,3294,0))
+            UTILS.randomSleep(300)
+        end
         MoveTo(3166, 3301, 0, 0)
         API.DoAction_Object1(0x29,API.OFF_ACT_GeneralObject_route0,{110518},50)
         while API.Read_LoopyLoop() and Equipment:Contains(1656) and Equipment:Contains(10067) and Equipment:Contains(843) do
