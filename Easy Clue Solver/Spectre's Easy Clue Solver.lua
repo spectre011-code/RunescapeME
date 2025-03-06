@@ -23,7 +23,7 @@ v1.5 - 09-02-2025
 v1.6 - 12-02-2025
     - Fixed step 10198, it was not able to consistently enter or exit the wheat field so a gate check was added.
 v1.7 - 06-03-2025
-    - Fixed Dive function as it was crashing the script if the accound did not have neither dive nor bladed dive.     
+    - Fixed Dive function as it was crashing the script if the account did not have neither dive nor bladed dive.     
 ]]
 
 local API = require("api")
