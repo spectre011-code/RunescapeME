@@ -1,6 +1,6 @@
 ScriptName = "Easy Clue Solver"
 Author = "Spectre011"
-ScriptVersion = "1.6"
+ScriptVersion = "1.7"
 ReleaseDate = "09-02-2025"
 Discord = "not_spectre011"
 --PRESET: https://imgur.com/a/fAnUAng
@@ -22,6 +22,8 @@ v1.5 - 09-02-2025
     - Fixed step 10186, it was not able to consistently reach the location of the step so a middle point was added to help with the pathing.
 v1.6 - 12-02-2025
     - Fixed step 10198, it was not able to consistently enter or exit the wheat field so a gate check was added.
+v1.7 - 06-03-2025
+    - Fixed Dive function as it was crashing the script if the accound did not have neither dive nor bladed dive.     
 ]]
 
 local API = require("api")
@@ -222,12 +224,24 @@ local function SurgeIfFacing(Orientation)
 end
 
 local function Dive(WPOINT)
-    local Bdive = API.GetABs_id(30331)
-    local Dive = API.GetABs_id(23714)
-    if (Bdive.id ~= 0 and Bdive.cooldown_timer < 1) or (Dive.id ~= 0 and Dive.cooldown_timer < 1) then
+    local bladedDive = API.GetABs_id(30331)
+    local dive = API.GetABs_id(23714)
+
+    if bladedDive and bladedDive.id ~= 0 and bladedDive.cooldown_timer < 1 and bladedDive.enabled then
+        print("Using Bladed Dive")
         if not API.DoAction_BDive_Tile(WPOINT) then
-            API.DoAction_Dive_Tile(WPOINT)
+            print("Failed to use Bladed Dive, attempting Dive instead.")
+            if dive and dive.id ~= 0 and dive.cooldown_timer < 1 and dive.enabled then
+                API.DoAction_Dive_Tile(WPOINT)
+            else
+                print("Dive is not available.")
+            end
         end
+    elseif dive and dive.id ~= 0 and dive.cooldown_timer < 1 and dive.enabled then
+        print("Using Dive")
+        API.DoAction_Dive_Tile(WPOINT)
+    else
+        print("Neither Bladed Dive nor Dive is available.")
     end
 end
 
