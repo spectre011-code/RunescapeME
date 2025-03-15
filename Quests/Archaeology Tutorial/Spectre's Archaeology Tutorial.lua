@@ -1,6 +1,6 @@
 ScriptName = "Archaeology Tutorial"
 Author = "Spectre011"
-ScriptVersion = "1.1"
+ScriptVersion = "1.2"
 ReleaseDate = "22-10-2024"
 Discord = "not_spectre011"
 
@@ -10,6 +10,8 @@ v1.0 - 22-10-2024
     - Initial release.
 v1.1 - 23-01-2025
     - Script was rewriten to use VBs instead of one code block.
+v1.2 - 14-13-2025
+    - Fixed step 85/100 that broke with the relic preset update.
 ]]
 
 local API = require("api")
@@ -183,23 +185,28 @@ while (API.Read_LoopyLoop()) do
     print("Quest Progress: ", questProgress)
     
     if questProgress >= 0 and questProgress < 10 then
+        print("Starting quest: 0-10 progress")
         UpdateStatus("0/100")
         API.DoAction_WalkerW(WPOINT.new(3385 + math.random(-4, 4), 3392 + math.random(-4, 4), 0))
         WaitForObjectToAppear(IDS.Guildmaster, 1)
         API.DoAction_NPC(0x2c,API.OFF_ACT_InteractNPC_route,{IDS.Guildmaster},50)
         HandleDialog()
     elseif questProgress == 10 then
+        print("Progress: 10/100 - Handling inventory action")
         UpdateStatus("10/100")
         API.DoAction_Inventory2({IDS.BronzeMattock},0,1,API.OFF_ACT_GeneralInterface_route)
         Sleep(0.3)
     elseif questProgress == 15 then
+        print("Progress: 15/100 - Handling dialog")
         UpdateStatus("15/100")
         HandleDialog()
     elseif questProgress == 20 then
+        print("Progress: 20/100 - Interacting with uncovered soil")
         UpdateStatus("20/100")
         API.DoAction_Object1(0x29,API.OFF_ACT_GeneralObject_route0,{IDS.UncoveredSoil},50)
         WaitForObjectToAppear(IDS.CenturionRemains, 0)
     elseif questProgress == 25 then
+        print("Progress: 25/100 - Interacting with Centurion Remains")
         UpdateStatus("25/100")
         API.DoAction_Object1(0x29,API.OFF_ACT_GeneralObject_route0,{IDS.CenturionRemains},50)
         HandleDialog()
@@ -211,6 +218,7 @@ while (API.Read_LoopyLoop()) do
             Sleep(1)
         end
     elseif questProgress == 30 then
+        print("Progress: 30/100 - Handling Centurion Sword and dialog")
         UpdateStatus("30/100")
         API.DoAction_Inventory1({IDS.CenturionSword},0,3,API.OFF_ACT_GeneralInterface_route)
         Sleep(1)
@@ -219,9 +227,11 @@ while (API.Read_LoopyLoop()) do
         API.DoAction_NPC(0x2c,API.OFF_ACT_InteractNPC_route,{IDS.Guildmaster},50)
         Sleep(3)
     elseif questProgress == 35 then
+        print("Progress: 35/100 - Handling dialog")
         UpdateStatus("35/100")
         HandleDialog()
     elseif questProgress == 40 then
+        print("Progress: 40/100 - Crafting interface and soil handling")
         UpdateStatus("40/100")
         API.DoAction_Object1(0x1,API.OFF_ACT_GeneralObject_route0,{IDS.Mesh},50)
         local IsCraftingInterfaceOpen = UTILS.isCraftingInterfaceOpen()
@@ -238,6 +248,7 @@ while (API.Read_LoopyLoop()) do
         Sleep(2)
         HandleDialog()
     elseif questProgress == 50 then
+        print("Progress: 50/100 - Moving to Material Storage")
         UpdateStatus("50/100")
         API.DoAction_WalkerW(WPOINT.new(3356 + math.random(-1, 1), 3396 + math.random(-1, 1), 0))
         WaitForObjectToAppear(IDS.MaterialStorage, 0)
@@ -247,6 +258,7 @@ while (API.Read_LoopyLoop()) do
         end
         Sleep(2)
     elseif questProgress == 55 then
+        print("Progress: 55/100 - Depositing materials and crafting")
         UpdateStatus("55/100")
         API.DoAction_Interface(0x24,0xffffffff,1,660,30,-1,API.OFF_ACT_GeneralInterface_route) -- Deposit all materials
         Sleep(1)
@@ -261,12 +273,14 @@ while (API.Read_LoopyLoop()) do
             Sleep(1)
         end
     elseif questProgress == 60 then
+        print("Progress: 60/100 - Returning to Guildmaster")
         UpdateStatus("60/100")
         API.DoAction_WalkerW(WPOINT.new(3385 + math.random(-4, 4), 3392 + math.random(-4, 4), 0))
         WaitForObjectToAppear(IDS.Guildmaster, 1)
         API.DoAction_NPC(0x2c,API.OFF_ACT_InteractNPC_route,{IDS.Guildmaster},50)
         HandleDialog()
     elseif questProgress == 65 then
+        print("Progress: 65/100 - Interacting with Velucia")
         UpdateStatus("65/100")
         API.DoAction_WalkerW(WPOINT.new(3343, 3385, 0))
         WaitForObjectToAppear(IDS.Velucia, 1)
@@ -278,28 +292,32 @@ while (API.Read_LoopyLoop()) do
         API.DoAction_Interface(0x24,0xffffffff,1,656,25,0,API.OFF_ACT_GeneralInterface_route) -- Contribute all button
         HandleDialog()
     elseif questProgress == 75 then
+        print("Progress: 75/100 - Returning to Guildmaster")
         UpdateStatus("75/100")
         API.DoAction_WalkerW(WPOINT.new(3385 + math.random(-4, 4), 3392 + math.random(-4, 4), 0))
         WaitForObjectToAppear(IDS.Guildmaster, 1)
         API.DoAction_NPC(0x2c,API.OFF_ACT_InteractNPC_route,{IDS.Guildmaster},50)
         HandleDialog()
     elseif questProgress == 80 then
+        print("Progress: 80/100 - Interacting with Monolith")
         UpdateStatus("80/100")
         API.DoAction_WalkerW(WPOINT.new(3363, 3383, 0))
         WaitForObjectToAppear(IDS.Monolith, 0)
         API.DoAction_Object1(0x29,API.OFF_ACT_GeneralObject_route1,{IDS.Monolith},50)
         HandleDialog()
     elseif questProgress == 85 then
+        print("Progress: 85/100 - Handling interface actions")
         UpdateStatus("85/100")
-        API.DoAction_Interface(0x2e,0xffffffff,1,691,71,-1,API.OFF_ACT_GeneralInterface_route) -- Another big yellow CONTINUE button
+        API.DoAction_Interface(0x2e,0xffffffff,1,691,86,-1,API.OFF_ACT_GeneralInterface_route) -- Another big yellow CONTINUE button
         Sleep(1.2)
-        API.DoAction_Interface(0x24,0xffffffff,1,691,57,-1,API.OFF_ACT_GeneralInterface_route) -- Harness power
+        API.DoAction_Interface(0x24,0xffffffff,1,691,72,-1,API.OFF_ACT_GeneralInterface_route) -- Harness power
         Sleep(1.2)
-        API.DoAction_Interface(0x24,0xffffffff,1,691,150,-1,API.OFF_ACT_GeneralInterface_route) -- Select slot 1
+        API.DoAction_Interface(0x24,0xffffffff,1,691,165,-1,API.OFF_ACT_GeneralInterface_route) -- Select slot 1
         Sleep(1.2)
-        API.DoAction_Interface(0x24,0xffffffff,1,691,146,-1,API.OFF_ACT_GeneralInterface_route) -- Confirm
+        API.DoAction_Interface(0x24,0xffffffff,1,691,161,-1,API.OFF_ACT_GeneralInterface_route) -- Confirm
         HandleDialog()
     elseif questProgress == 95 then
+        print("Progress: 95/100 - Final steps with Guildmaster2")
         UpdateStatus("95/100")
         Sleep(3)
         API.DoAction_WalkerW(WPOINT.new(3325 + math.random(-1, 1), 3376 + math.random(-1, 1), 0))
@@ -316,6 +334,7 @@ while (API.Read_LoopyLoop()) do
         HandleDialog()
         Sleep(1)
     elseif questProgress == 96 then
+        print("Progress: 96/100 - Claiming soil box from Ezreal")
         UpdateStatus("96/100")
         API.DoAction_NPC(0x29,API.OFF_ACT_InteractNPC_route2,{IDS.Ezreal},50) --Open Ezreal shop
         while API.Read_LoopyLoop() and not IsPlayerInArea(3321, 3382, 0, 1) do
@@ -327,6 +346,7 @@ while (API.Read_LoopyLoop()) do
         API.DoAction_Interface(0x24,0xffffffff,1,1594,54,-1,API.OFF_ACT_GeneralInterface_route) --Confirm
         Sleep(1.2)
     elseif questProgress == 97 then
+        print("Progress: 97/100 - Final dialog with Guildmaster2")
         UpdateStatus("97/100")
         API.DoAction_NPC(0x2c,API.OFF_ACT_InteractNPC_route,{IDS.Guildmaster2},50)
         HandleDialog()
@@ -334,6 +354,7 @@ while (API.Read_LoopyLoop()) do
         API.KeyboardPress2(0x1B, 100, 100) --Escape key
         HandleDialog()
     elseif questProgress == 100 then
+        print("Progress: 100/100 - Quest completed!")
         UpdateStatus("100/100")
         Sleep(2)
         print("Quest Completed!!!")
