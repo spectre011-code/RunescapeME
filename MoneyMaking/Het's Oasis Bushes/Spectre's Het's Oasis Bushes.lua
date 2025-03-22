@@ -1,6 +1,6 @@
 ScriptName = "Het's Oasis Bushes"
 Author = "Spectre011"
-ScriptVersion = "1.0"
+ScriptVersion = "1.1"
 ReleaseDate = "22-03-2025"
 Discord = "not_spectre011"
 
@@ -8,6 +8,8 @@ Discord = "not_spectre011"
 Changelog:
 v1.0 - 22-03-2025
     - Initial release.
+v1.1 - 22-03-2025
+    - Added UTILS:antiIdle()
 ]]
 
 local API = require("api")
@@ -358,6 +360,7 @@ Write_fake_mouse_do(false)
 PopulateCurrentFlowers() --Populates currentFlowers with the amount that the playes has in inventory at the start of the script
 
 while (API.Read_LoopyLoop()) do
+    UTILS:antiIdle()
     if tick ~= API.Get_tick() then
         print("Tick: "..tick)
         ReqCheck()
