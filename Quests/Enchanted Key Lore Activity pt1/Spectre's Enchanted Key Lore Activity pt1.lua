@@ -1,14 +1,16 @@
 ScriptName = "Enchanted Key Lore Activity pt1"
 Author = "Spectre011"
-ScriptVersion = "1.0"
+ScriptVersion = "2.0.0"
 ReleaseDate = "27-01-2025"
-Discord = "not_spectre011"
---Requisites: https://imgur.com/a/egKqjxC
+DiscordHandle = "not_spectre011"
 
 --[[
 Changelog:
 v1.0 - 27-01-2025
     - Initial release.
+v2.0.0 - 31-03-2025
+    - Adopted SemVer 
+    - Changed Discord variable name to DiscordHandle
 ]]
 
 local API = require("api")
@@ -119,9 +121,9 @@ EndTable[3] = {"Script Name: ".. ScriptName}
 EndTable[4] = {"Author: ".. Author}
 EndTable[5] = {"Version: ".. ScriptVersion}
 EndTable[6] = {"Release Date: ".. ReleaseDate}
-EndTable[7] = {"Discord: ".. Discord}
+EndTable[7] = {"Discord: ".. DiscordHandle}
 --------------------END END TABLE STUFF--------------------
-local CurrentStep = 0
+
 local StepsCompleted = {
     [1] = false,
     [2] = false,
@@ -427,13 +429,13 @@ while (API.Read_LoopyLoop()) do
     UTILS:antiIdle()
     API.DoAction_Inventory1(6754,0,1,API.OFF_ACT_GeneralInterface_route)
     UTILS.randomSleep(1000)
-    
+
     if CompletedCheck() then
         print("No steps left. Exiting.")
         API.Write_LoopyLoop(false)
         break
     end
-    
+
     if not Inventory:Contains(6754) then
         print("Key not found. Exiting.")
         API.Write_LoopyLoop(false)
@@ -463,5 +465,5 @@ print("Script Name: " .. ScriptName)
 print("Author: " .. Author)
 print("Version: " .. ScriptVersion)
 print("Release Date: " .. ReleaseDate)
-print("Discord: " .. Discord)
+print("Discord: " .. DiscordHandle)
 print("----------//----------")
