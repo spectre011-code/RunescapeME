@@ -1,8 +1,8 @@
 ScriptName = "Easy Clue Solver"
 Author = "Spectre011"
-ScriptVersion = "1.7"
+ScriptVersion = "2.0.0"
 ReleaseDate = "09-02-2025"
-Discord = "not_spectre011"
+DiscordHandle = "not_spectre011"
 --PRESET: https://imgur.com/a/fAnUAng
 
 --[[
@@ -23,7 +23,10 @@ v1.5 - 09-02-2025
 v1.6 - 12-02-2025
     - Fixed step 10198, it was not able to consistently enter or exit the wheat field so a gate check was added.
 v1.7 - 06-03-2025
-    - Fixed Dive function as it was crashing the script if the account did not have neither dive nor bladed dive.     
+    - Fixed Dive function as it was crashing the script if the account did not have neither dive nor bladed dive.
+v2.0.0 - 31-03-2025
+    - Adopted SemVer 
+    - Changed Discord variable name to DiscordHandle  
 ]]
 
 local API = require("api")
@@ -181,7 +184,7 @@ local function Tracking() -- This is what should be called at the end of every c
     MetricsTable[9] = {"Author:", Author}
     MetricsTable[10] = {"Version:", ScriptVersion}
     MetricsTable[11] = {"Release Date:", ReleaseDate}
-    MetricsTable[12] = {"Discord:", Discord}
+    MetricsTable[12] = {"Discord:", DiscordHandle}
 end
 --------------------END METRICS STUFF--------------------
 local function Sleep(seconds)
@@ -2386,6 +2389,6 @@ print("Script Name: " .. ScriptName)
 print("Author: " .. Author)
 print("Version: " .. ScriptVersion)
 print("Release Date: " .. ReleaseDate)
-print("Discord: " .. Discord)
+print("Discord: " .. DiscordHandle)
 print("----------//----------")
 print("Reason for Stopping: " .. ReasonForStopping)
