@@ -1,14 +1,17 @@
 ScriptName = "Making History Quest"
 Author = "Spectre011"
-ScriptVersion = "1.0"
+ScriptVersion = "2.0.0"
 ReleaseDate = "23-01-2025"
-Discord = "not_spectre011"
+DiscordHandle = "not_spectre011"
 --Requirements: https://imgur.com/a/VofobpY
 
 --[[
 Changelog:
 v1.0 - 23-01-2025
     - Initial release.
+v2.0.0 - 31-03-2025
+    - Adopted SemVer 
+    - Changed Discord variable name to DiscordHandle
 ]]
 
 local API = require("api")
@@ -107,7 +110,7 @@ EndTable[3] = {"Script Name: ".. ScriptName}
 EndTable[4] = {"Author: ".. Author}
 EndTable[5] = {"Version: ".. ScriptVersion}
 EndTable[6] = {"Release Date: ".. ReleaseDate}
-EndTable[7] = {"Discord: ".. Discord}
+EndTable[7] = {"Discord: ".. DiscordHandle}
 --------------------END END TABLE STUFF--------------------
 
 local function Sleep(seconds)
@@ -680,5 +683,5 @@ print("Script Name: " .. ScriptName)
 print("Author: " .. Author)
 print("Version: " .. ScriptVersion)
 print("Release Date: " .. ReleaseDate)
-print("Discord: " .. Discord)
+print("Discord: " .. DiscordHandle)
 print("----------//----------")
