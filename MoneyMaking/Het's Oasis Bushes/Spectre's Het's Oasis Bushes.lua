@@ -1,8 +1,8 @@
 ScriptName = "Het's Oasis Bushes"
 Author = "Spectre011"
-ScriptVersion = "1.1"
+ScriptVersion = "2.0.0"
 ReleaseDate = "22-03-2025"
-Discord = "not_spectre011"
+DiscordHandle = "not_spectre011"
 
 --[[
 Changelog:
@@ -10,6 +10,12 @@ v1.0 - 22-03-2025
     - Initial release.
 v1.1 - 22-03-2025
     - Added UTILS:antiIdle()
+v1.2 - 23-03-2025
+    - Changed metrics to track only golden roses
+    - Added API.LogDrop to track golden roses
+v2.0.0 - 31-03-2025
+    - Adopted SemVer 
+    - Changed Discord variable name to DiscordHandle  
 ]]
 
 local API = require("api")
@@ -160,22 +166,23 @@ end
 local function Tracking() -- This is what should be called at the end of every cycle
     counter = counter + 1
     local runTime = os.time() - startTime
-    local increasesPerHour = calcIncreasesPerHour() 
-    local avgIncreaseTime = calcAverageIncreaseTime() 
+    local increasesPerHour = calcIncreasesPerHour()
+    local avgIncreaseTime = calcAverageIncreaseTime()
 
     MetricsTable[1] = {"Thanks for using my script!"}
     MetricsTable[2] = {" "}
     MetricsTable[3] = {"Total Run Time", formatRunTime(runTime)}
-    MetricsTable[4] = {"Total flowers", tostring(counter)}
-    MetricsTable[5] = {"Flowers per Hour", string.format("%.2f", increasesPerHour)}
-    MetricsTable[6] = {"Average Flowers Time (s)", string.format("%.2f", avgIncreaseTime)}
+    MetricsTable[4] = {"Total golden roses", tostring(counter)}
+    MetricsTable[5] = {"golden roses per Hour", string.format("%.2f", increasesPerHour)}
+    MetricsTable[6] = {"Average golden roses Time (s)", string.format("%.2f", avgIncreaseTime)}
     MetricsTable[7] = {"-----", "-----"}
     MetricsTable[8] = {"Script's Name:", ScriptName}
     MetricsTable[9] = {"Author:", Author}
     MetricsTable[10] = {"Version:", ScriptVersion}
     MetricsTable[11] = {"Release Date:", ReleaseDate}
-    MetricsTable[12] = {"Discord:", Discord}    
+    MetricsTable[12] = {"Discord:", DiscordHandle}    
 end
+   
 
 --------------------END METRICS STUFF--------------------
 local ActionNeeded = "None"
@@ -310,22 +317,19 @@ local function StateCheck()
 end
 
 local function PopulateCurrentFlowers()
-    for _, id in ipairs(IDS["Flowers"]) do
-        currentFlowers = currentFlowers + Inventory:GetItemAmount(id)
-    end
+    currentFlowers = currentFlowers + Inventory:GetItemAmount(IDS["Flowers"][5])
 end
 
 local function CheckFlowers()
     local FlowerSum = 0
-    for _, id in ipairs(IDS["Flowers"]) do
-        FlowerSum = FlowerSum + Inventory:GetItemAmount(id)
-    end
+    FlowerSum = FlowerSum + Inventory:GetItemAmount(IDS["Flowers"][5])
     if FlowerSum > currentFlowers then
         Tracking()
+        API.LogDrop(IDS["Flowers"][5], 1)
         currentFlowers = FlowerSum
-        print("Flower amount changed")
+        print("Golden roses amount changed")
     else
-        print("Flower amount did not change")
+        print("Golden roses did not change")
     end
 end
 
@@ -341,7 +345,7 @@ local function HandleScarab()
     print("Trying to shoo the Scarab")
     UpdateStatus("Handling scarab")
     API.DoAction_NPC(0x29,API.OFF_ACT_InteractNPC_route,{IDS["Anomalies"][1]},50)
-    ActionNeeded = "None"
+    ActionNeeded = "HarvestBush"
     UTILS.randomSleep(1000)
 end
 
@@ -393,6 +397,6 @@ print("Script Name: " .. ScriptName)
 print("Author: " .. Author)
 print("Version: " .. ScriptVersion)
 print("Release Date: " .. ReleaseDate)
-print("Discord: " .. Discord)
+print("Discord: " .. DiscordHandle)
 print("----------//----------")
 print("Reason for stopping: " .. ReasonForStopping)
