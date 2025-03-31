@@ -1,8 +1,8 @@
 ScriptName = "Archaeology Tutorial"
 Author = "Spectre011"
-ScriptVersion = "1.2"
+ScriptVersion = "2.0.0"
 ReleaseDate = "22-10-2024"
-Discord = "not_spectre011"
+DiscordHandle = "not_spectre011"
 
 --[[
 Changelog:
@@ -12,6 +12,9 @@ v1.1 - 23-01-2025
     - Script was rewriten to use VBs instead of one code block.
 v1.2 - 14-13-2025
     - Fixed step 85/100 that broke with the relic preset update.
+v2.0.0 - 31-03-2025
+    - Adopted SemVer 
+    - Changed Discord variable name to DiscordHandle
 ]]
 
 local API = require("api")
@@ -109,7 +112,7 @@ EndTable[3] = {"Script Name: ".. ScriptName}
 EndTable[4] = {"Author: ".. Author}
 EndTable[5] = {"Version: ".. ScriptVersion}
 EndTable[6] = {"Release Date: ".. ReleaseDate}
-EndTable[7] = {"Discord: ".. Discord}
+EndTable[7] = {"Discord: ".. DiscordHandle}
 --------------------END END TABLE STUFF--------------------
 
 local function Sleep(seconds)
@@ -370,5 +373,5 @@ print("Script Name: " .. ScriptName)
 print("Author: " .. Author)
 print("Version: " .. ScriptVersion)
 print("Release Date: " .. ReleaseDate)
-print("Discord: " .. Discord)
+print("Discord: " .. DiscordHandle)
 print("----------//----------")
