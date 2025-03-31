@@ -1,8 +1,8 @@
 ScriptName = "AIO Agility"
 Author = "Spectre011"
-ScriptVersion = "1.10"
+ScriptVersion = "2.0.0"
 ReleaseDate = "06-09-2024"
-Discord = "not_spectre011"
+DiscordHandle = "not_spectre011"
 
 --[[
 Changelog:
@@ -46,9 +46,12 @@ v1.9 - 01-02-2025
     - Added a 150ms sleep to dives and surges
     - Added WaitForObjectToAppear function before trying to interact with advanced anachronia obstacles
 v1.10 - 05-02-2025
-    - Fixed a bug with the Northern Anachronia circuit where the script would not sleep enough for the cave animation before proceeding to the next obstacle
+    - Fixed a bug with the Northern Anachronia circuit where the script would not sleep enough for the cave animation before proceeding to the next last_obstacle_id
     - Added a AnacResources() function to check for compacted resources
     - Added xp meter
+v2.0.0 - 31-03-2025
+    - Adopted SemVer 
+    - Changed Discord variable name to DiscordHandle
 
 Move to the starting location of the circuit and set the course]]
 
@@ -180,6 +183,18 @@ end
 
 CreateGUI()
 --------------------END GUI STUFF--------------------
+--------------------START END TABLE STUFF--------------------
+local EndTable = {
+    {"-"}
+}
+EndTable[1] = {"Thanks for using my script!"}
+EndTable[2] = {" "}
+EndTable[3] = {"Script Name: ".. ScriptName}
+EndTable[4] = {"Author: ".. Author}
+EndTable[5] = {"Version: ".. ScriptVersion}
+EndTable[6] = {"Release Date: ".. ReleaseDate}
+EndTable[7] = {"Discord: ".. DiscordHandle}
+--------------------END END TABLE STUFF--------------------
 
 local courseDescriptions = {
     [1] = "1-30 Jumping the bridge outside the Nature Grotto", -- Starting location https://imgur.com/a/Lj06Ook
@@ -1444,3 +1459,11 @@ while (API.Read_LoopyLoop()) do
     print("Memory usage: ", collectgarbage("count"), "KB")
     collectgarbage("collect")
 end
+API.DrawTable(EndTable)
+print("----------//----------")
+print("Script Name: " .. ScriptName)
+print("Author: " .. Author)
+print("Version: " .. ScriptVersion)
+print("Release Date: " .. ReleaseDate)
+print("Discord: " .. DiscordHandle)
+print("----------//----------")
