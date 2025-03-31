@@ -1,13 +1,16 @@
 ScriptName = "Enter the Abyss Miniquest"
 Author = "Spectre011"
-ScriptVersion = "1.0"
+ScriptVersion = "2.0.0"
 ReleaseDate = "03-02-2025"
-Discord = "not_spectre011"
+DiscordHandle = "not_spectre011"
 
 --[[
 Changelog:
 v1.0 - 03-02-2025
     - Initial release.
+v2.0.0 - 31-03-2025
+    - Adopted SemVer 
+    - Changed Discord variable name to DiscordHandle
 ]]
 --Preset: https://imgur.com/a/BGUqXg5
 
@@ -121,7 +124,7 @@ EndTable[3] = {"Script Name: ".. ScriptName}
 EndTable[4] = {"Author: ".. Author}
 EndTable[5] = {"Version: ".. ScriptVersion}
 EndTable[6] = {"Release Date: ".. ReleaseDate}
-EndTable[7] = {"Discord: ".. Discord}
+EndTable[7] = {"Discord: ".. DiscordHandle}
 --------------------END END TABLE STUFF--------------------
 local interface = {
     questStart = { { 1500,0,-1,0 }, { 1500,329,-1,0 }, { 1500,399,-1,0 }, { 1500,407,-1,0 }, { 1500,408,-1,0 }, { 1500,408,3,0 } }
@@ -337,5 +340,5 @@ print("Script Name: " .. ScriptName)
 print("Author: " .. Author)
 print("Version: " .. ScriptVersion)
 print("Release Date: " .. ReleaseDate)
-print("Discord: " .. Discord)
+print("Discord: " .. DiscordHandle)
 print("----------//----------")
