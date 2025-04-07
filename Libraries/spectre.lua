@@ -1,3 +1,6 @@
+Author = "Spectre011"
+DiscordHandle = "not_spectre011"
+
 local API = require("api")
 
 local SpectreUtils = {}
@@ -21,9 +24,10 @@ function SpectreUtils.GetBuffs()
     if buffs then
         for _, object in ipairs(buffs) do
             print("----------")
-            print("id:", object.id)
-            print("text:", object.text)
-            print("conv_text:", object.conv_text)
+            print("id: ", object.id)
+            print("found: ", object.found)
+            print("text: ", object.text)
+            print("conv_text: ", object.conv_text)
             print("----------")
         end
     end
@@ -37,9 +41,10 @@ function SpectreUtils.GetDebuffs()
     if debuffs then
         for _, object in ipairs(buffs) do
             print("----------")
-            print("id:", object.id)
-            print("text:", object.text)
-            print("conv_text:", object.conv_text)
+            print("id: ", object.id)
+            print("found: ", object.found)
+            print("text: ", object.text)
+            print("conv_text: ", object.conv_text)
             print("----------")
         end
     end
@@ -150,7 +155,7 @@ end
 --Prints info about specified VB
 ---@param VB number
 ---@return boolean
-function SpectreUtils.GetVB(VB, level)
+function SpectreUtils.GetVB(VB)
     local var = API.VB_FindPSettinOrder(VB)
     print("--------------------------")
     print("state: " .. var.state)
@@ -160,6 +165,58 @@ function SpectreUtils.GetVB(VB, level)
     print("--------------------------")
     return true
 end
+
+---Prints container contents of non empty slots. 93 = inventory and 94 = equipment
+---@param containerId number The ID of the container to print contents from
+---@return nil Prints to console but doesnt return a value
+function SpectreUtils.PrintContainerContents(containerId)
+    local items = API.Container_Get_all(containerId)
+    if not items or #items == 0 then
+        print("Container is empty")
+        return
+    end
+
+    local validItemCount = 0
+    for _, item in ipairs(items) do
+        if item.item_id and item.item_id > 0 then
+            validItemCount = validItemCount + 1
+        end
+    end
+    
+    print("=== Container Contents ===")
+    print("Valid items: " .. validItemCount)
+    print("--------------------------")
+
+    for i, item in ipairs(items) do
+        if item.item_id and item.item_id > 0 then
+            print("Item #" .. i)
+            print("  item_id: " .. tostring(item.item_id))
+            print("  item_stack: " .. tostring(item.item_stack))
+            print("  item_slot: " .. tostring(item.item_slot))
+
+            print("  Extra_mem:")
+            if item.Extra_mem then
+                for k, v in pairs(item.Extra_mem) do
+                    print("    " .. tostring(k) .. ": " .. tostring(v))
+                end
+            else
+                print("    nil")
+            end
+
+            print("  Extra_ints:")
+            if item.Extra_ints then
+                for k, v in pairs(item.Extra_ints) do
+                    print("    " .. tostring(k) .. ": " .. tostring(v))
+                end
+            else
+                print("    nil")
+            end
+            
+            print("--------------------------")
+        end
+    end
+end
+
 
 --Checks if the player is in a specified area
 ---@param x number
@@ -484,6 +541,36 @@ function SpectreUtils.Dive(X, Y, Z)
             end
         end
     end
+end
+
+--Retrieves the kill counts GWD 2 followers
+---@return table<string, number>
+function SpectreUtils.GetGWD2KillCounts()
+    local baseAddresses = {
+        { { 1746,0,-1,0 }, { 1746,38,-1,0 }, { 1746,41,-1,0 }, { 1746,43,-1,0 }, { 1746,47,-1,0 } },
+        { { 1746,0,-1,0 }, { 1746,38,-1,0 }, { 1746,41,-1,0 }, { 1746,49,-1,0 }, { 1746,54,-1,0 } },
+        { { 1746,0,-1,0 }, { 1746,38,-1,0 }, { 1746,41,-1,0 }, { 1746,55,-1,0 }, { 1746,60,-1,0 } },
+        { { 1746,0,-1,0 }, { 1746,38,-1,0 }, { 1746,41,-1,0 }, { 1746,61,-1,0 }, { 1746,66,-1,0 } },
+    }
+
+    local keyNames = { "Seren", "Sliske", "Zamorak", "Zaros" }
+    local results = {}
+
+    for i, baseAddress in ipairs(baseAddresses) do
+        local data = API.ScanForInterfaceTest2Get(false, baseAddress)
+        if #data >= 0 then
+            local amount = API.ReadCharsLimit(data[1].memloc + API.I_itemids3, 255)
+            results[keyNames[i]] = tonumber(amount)
+        end
+    end
+
+    print("Kill Counts:")
+    print("Seren:", results.Seren)
+    print("Sliske:", results.Sliske)
+    print("Zamorak:", results.Zamorak)
+    print("Zaros:", results.Zaros)
+    
+    return results
 end
 
 return SpectreUtils
