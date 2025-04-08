@@ -1,6 +1,6 @@
 ScriptName = "Easy Clue Solver"
 Author = "Spectre011"
-ScriptVersion = "2.0.1"
+ScriptVersion = "2.0.2"
 ReleaseDate = "09-02-2025"
 DiscordHandle = "not_spectre011"
 --PRESET: https://imgur.com/a/fAnUAng
@@ -29,6 +29,9 @@ v2.0.0 - 31-03-2025
     - Changed Discord variable name to DiscordHandle
 v2.0.1 - 08-04-2025
     - Increase tolerace+1 to tolerance+3 due to step 10198 getting stuck constantly
+v2.0.2 - 08-04-2025
+    - Added a sleep after walking to emote area on step 10200
+    - Reduced tolerance+3 to tolerance+2 on MoveTo() function
 ]]
 
 local API = require("api")
@@ -367,7 +370,7 @@ end
 
 local function MoveTo(X, Y, Z, Tolerance)
     API.DoAction_WalkerW(WPOINT.new(X + math.random(-Tolerance, Tolerance),Y + math.random(-Tolerance, Tolerance),Z))
-    while API.Read_LoopyLoop() and not IsPlayerInArea(X, Y, Z, Tolerance + 3) do
+    while API.Read_LoopyLoop() and not IsPlayerInArea(X, Y, Z, Tolerance + 2) do
         UTILS.randomSleep(300)
     end
     return true
@@ -1833,6 +1836,7 @@ local clueSteps = {
         end
         EquipStuff(1101, 1637, 839)
         MoveTo(3109, 3295, 0, 1)
+        UTILS.randomSleep(3000)
         API.DoAction_Interface(0xffffffff,0xffffffff,1,590,11,12,API.OFF_ACT_GeneralInterface_route) --Dance emote
         WaitForObjectToAppear(5141, 1)
         API.DoAction_NPC(0x2c,API.OFF_ACT_InteractNPC_route,{5141},50) -- Talk to Uri
