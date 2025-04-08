@@ -1,6 +1,6 @@
 ScriptName = "Easy Clue Solver"
 Author = "Spectre011"
-ScriptVersion = "2.0.0"
+ScriptVersion = "2.0.1"
 ReleaseDate = "09-02-2025"
 DiscordHandle = "not_spectre011"
 --PRESET: https://imgur.com/a/fAnUAng
@@ -26,7 +26,9 @@ v1.7 - 06-03-2025
     - Fixed Dive function as it was crashing the script if the account did not have neither dive nor bladed dive.
 v2.0.0 - 31-03-2025
     - Adopted SemVer 
-    - Changed Discord variable name to DiscordHandle  
+    - Changed Discord variable name to DiscordHandle
+v2.0.1 - 08-04-2025
+    - Increase tolerace+1 to tolerance+3 due to step 10198 getting stuck constantly
 ]]
 
 local API = require("api")
@@ -365,7 +367,7 @@ end
 
 local function MoveTo(X, Y, Z, Tolerance)
     API.DoAction_WalkerW(WPOINT.new(X + math.random(-Tolerance, Tolerance),Y + math.random(-Tolerance, Tolerance),Z))
-    while API.Read_LoopyLoop() and not IsPlayerInArea(X, Y, Z, Tolerance + 1) do
+    while API.Read_LoopyLoop() and not IsPlayerInArea(X, Y, Z, Tolerance + 3) do
         UTILS.randomSleep(300)
     end
     return true
