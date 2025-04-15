@@ -1,12 +1,12 @@
 ScriptName = "Blooming Burrow Activities"
 Author = "Spectre011"
-ScriptVersion = "1.0"
+ScriptVersion = "1.0.0"
 ReleaseDate = "15-04-2025"
 DiscordHandle = "not_spectre011"
 
 --[[
 Changelog:
-v1.0 - 15-04-2025
+v1.0.0 - 15-04-2025
     - Initial release.
 ]]
 
