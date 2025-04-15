@@ -1,12 +1,12 @@
 ScriptName = "Blooming Burrow Activities"
 Author = "Spectre011"
 ScriptVersion = "1.0"
-ReleaseDate = "14-04-2025"
+ReleaseDate = "15-04-2025"
 DiscordHandle = "not_spectre011"
 
 --[[
 Changelog:
-v1.0 - 14-04-2025
+v1.0 - 15-04-2025
     - Initial release.
 ]]
 
@@ -115,7 +115,15 @@ local function CreateGUI()
     AddBackground("Background", 0.90, 1, ImColor.new(15, 13, 18, 255))
     AddLabel("Author/Version", ScriptName .. " v" .. ScriptVersion .. " by " .. Author, ImColor.new(238, 230, 0))
     AddLabel("ActivityComboBoxLabel", "Select an activity:", ImColor.new(255, 255, 255))
-    local options = {"- none - ", "Beekeeping", "Carrot Boating", "Chocolate Mining", "Smith Shiny Foil", "Cocoamancy", "Egg Plant Production Line"}
+    local options = {
+        "- none - ", 
+        "Beekeeping", 
+        "Carrot Boating", 
+        "Chocolate Mining", 
+        "Smith Shiny Foil", 
+        --"Cocoamancy", 
+        --"Egg Plant Production Line"
+    }
     AddComboBox("ActivityComboBox", " ", options)
     AddLabel("Status", "Status: " .. CurrentStatus, ImColor.new(238, 230, 0))
 end
@@ -127,8 +135,8 @@ local function SetComboBoxOption()
     if SelectedOption == "Carrot Boating" then stageID = 2 end
     if SelectedOption == "Chocolate Mining" then stageID = 3 end
     if SelectedOption == "Smith Shiny Foil" then stageID = 4 end
-    if SelectedOption == "Cocoamancy" then stageID = 5 end
-    if SelectedOption == "Egg Plant Production Line" then stageID = 6 end
+    --if SelectedOption == "Cocoamancy" then stageID = 5 end
+    --if SelectedOption == "Egg Plant Production Line" then stageID = 6 end
 end
 
 local function UpdateStatus(newStatus)
@@ -178,9 +186,21 @@ local IDS = {
         ["Foil"] = {56553}
     },
     ["Cocoamancy"] = {
-        ["ChocolateBurrowFilled"] = {129765}
+        ["ChocolateRabbit"] = {56550},
+        ["ChocolateBurrow"] = {129765},
+        ["BurrowCoordinates"] = {
+            [1] = 	 { x = 3780, y = 4915, z = 0},
+            [2] = 	 { x = 3767, y = 4909, z = 0},
+            [3] = 	 { x = 3770, y = 4956, z = 0},
+            [4] = 	 { x = 3755, y = 4976, z = 0},
+            [5] = 	 { x = 3806, y = 4951, z = 0},
+            [6] = 	 { x = 3831, y = 4958, z = 0},
+            [7] = 	 { x = 3834, y = 4954, z = 0},
+            [8] = 	 { x = 3829, y = 4917, z = 0},
+            [9] = 	 { x = 3822, y = 4924, z = 0},
+            [10] = 	 { x = 3805, y = 4892, z = 0}
+        }
     }
-
 }
 
 local function Sleep(seconds)
