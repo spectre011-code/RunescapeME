@@ -1,6 +1,6 @@
 ScriptName = "Blooming Burrow Activities"
 Author = "Spectre011"
-ScriptVersion = "1.1.0"
+ScriptVersion = "1.1.1"
 ReleaseDate = "14-04-2025"
 DiscordHandle = "not_spectre011"
 
@@ -12,6 +12,8 @@ v1.1.0 - 18-04-2025
     - Added the Production Line activities
     - Added Cocoamancy activity
     - Removed the memory usage print from main loop
+v1.1.1 - 18-04-2025
+    - Increased GUI background as text was leaking
 ]]
 
 local API = require("api")
@@ -124,7 +126,7 @@ local function GUIDraw()
 end
 
 local function CreateGUI()
-    AddBackground("Background", 0.90, 1, ImColor.new(15, 13, 18, 255))
+    AddBackground("Background", 0.95, 1, ImColor.new(15, 13, 18, 255))
     AddLabel("Author/Version", ScriptName .. " v" .. ScriptVersion .. " by " .. Author, ImColor.new(238, 230, 0))
     AddLabel("ActivityComboBoxLabel", "Select an activity:", ImColor.new(255, 255, 255))
     local options = {
