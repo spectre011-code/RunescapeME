@@ -1,6 +1,6 @@
 ScriptName = "AIO Agility"
 Author = "Spectre011"
-ScriptVersion = "2.0.0"
+ScriptVersion = "2.1.0"
 ReleaseDate = "06-09-2024"
 DiscordHandle = "not_spectre011"
 
@@ -52,6 +52,11 @@ v1.10 - 05-02-2025
 v2.0.0 - 31-03-2025
     - Adopted SemVer 
     - Changed Discord variable name to DiscordHandle
+v2.1.0 - 27-04-2025
+    - Fixed typo in write fakemouse false function
+    - Fixed Obstacle ID status in UI for wildy course
+    - Added an extended anim check after each obstacle in wildy course
+    - Removed print memory usage from main loop
 
 Move to the starting location of the circuit and set the course]]
 
@@ -556,8 +561,13 @@ local stageFunctions = {
             if currentWildernessObstacle == 1 then
                 -- obstacle pipe
                 print("Attempting to overcome obstacle 1 (pipe)...")
+                UpdateStatus(obstacles[1].id)
                 UTILS.randomSleep(1000)
                 API.DoAction_Object1(0xb5,API.OFF_ACT_GeneralObject_route0,{obstacles[1].id},50)
+                while API.Read_LoopyLoop() and API.IsPlayerAnimating_(API.GetLocalPlayerName(), 30) do
+                    print("Checking anim")
+                    API.RandomSleep2(3000, 300, 300)
+                end
                 local tries = 0
                 while API.Read_LoopyLoop() and not isPlayerAtCoords(obstacles[1].finalCoords[1], obstacles[1].finalCoords[2]) do
                     UTILS.randomSleep(1000)
@@ -571,10 +581,15 @@ local stageFunctions = {
             elseif currentWildernessObstacle == 2 then
                 -- ropeswing
                 print("Attempting to overcome obstacle 2 (ropeswing)...")
+                UpdateStatus(obstacles[2].id)
                 UTILS.randomSleep(1000)
                 print(obstacles[2].finalCoords[1])
                 print(obstacles[2].finalCoords[2])
                 API.DoAction_Object1(0xb5,API.OFF_ACT_GeneralObject_route0,{obstacles[2].id},50)
+                while API.Read_LoopyLoop() and API.IsPlayerAnimating_(API.GetLocalPlayerName(), 30) do
+                    print("Checking anim")
+                    API.RandomSleep2(3000, 300, 300)
+                end
                 local tries = 0
                 while API.Read_LoopyLoop() and not isPlayerAtCoords(obstacles[2].finalCoords[1], obstacles[2].finalCoords[2]) do
                     if FellInHole() then
@@ -600,8 +615,13 @@ local stageFunctions = {
             elseif currentWildernessObstacle == 3 then
                 -- stepping stone
                 print("Attempting to overcome obstacle 3 (stepping stone)...")
+                UpdateStatus(obstacles[3].id)
                 UTILS.randomSleep(1000)
                 API.DoAction_Object1(0xb5,API.OFF_ACT_GeneralObject_route0,{obstacles[3].id},50)
+                while API.Read_LoopyLoop() and API.IsPlayerAnimating_(API.GetLocalPlayerName(), 30) do
+                    print("Checking anim")
+                    API.RandomSleep2(3000, 300, 300)
+                end
                 local tries = 0
                 while API.Read_LoopyLoop() and not isPlayerAtCoords(obstacles[3].finalCoords[1], obstacles[3].finalCoords[2]) do
                     if API.PlayerCoord().y > 3960 then
@@ -623,8 +643,13 @@ local stageFunctions = {
             elseif currentWildernessObstacle == 4 then
                 -- log balance
                 print("Attempting to overcome obstacle 4 (log balance)...")
+                UpdateStatus(obstacles[4].id)
                 UTILS.randomSleep(1000)
                 API.DoAction_Object1(0xb5,API.OFF_ACT_GeneralObject_route0,{obstacles[4].id},50)
+                while API.Read_LoopyLoop() and API.IsPlayerAnimating_(API.GetLocalPlayerName(), 30) do
+                    print("Checking anim")
+                    API.RandomSleep2(3000, 300, 300)
+                end
                 local tries = 0
                 while API.Read_LoopyLoop() and not isPlayerAtCoords(obstacles[4].finalCoords[1], obstacles[4].finalCoords[2]) do
                     if FellInHole() then
@@ -650,7 +675,12 @@ local stageFunctions = {
             elseif currentWildernessObstacle == 5 then
                 -- cliff side
                 print("Attempting to overcome obstacle 5 (cliff side)...")
+                UpdateStatus(obstacles[5].id)
                 API.DoAction_Object1(0xb5,API.OFF_ACT_GeneralObject_route0,{obstacles[5].id},50)
+                while API.Read_LoopyLoop() and API.IsPlayerAnimating_(API.GetLocalPlayerName(), 30) do
+                    print("Checking anim")
+                    API.RandomSleep2(3000, 300, 300)
+                end
                 local tries = 0
                 while API.Read_LoopyLoop() and not API.PInArea21(2991, 3006, 3931, 3937) do
                     UTILS.randomSleep(1000)
@@ -1445,18 +1475,19 @@ API.ScriptRuntimeString()
 API.GetTrackedSkills()
 
 API.Write_LoopyLoop(true)
-Write_fake_mouse_do(false)
+API.Write_fake_mouse_do(false)
 while (API.Read_LoopyLoop()) do
     UTILS:antiIdle()
     GUIDraw()
     SetCourse()
+    
     if selectedOption ~= nil and selectedOption ~= "- none -" then
         RechargeSilverhawkBoots(100)
         executeStage(courseID)
         UTILS.randomSleep(500)
         AnacResources()
     end
-    print("Memory usage: ", collectgarbage("count"), "KB")
+
     collectgarbage("collect")
 end
 API.DrawTable(EndTable)
@@ -1467,3 +1498,4 @@ print("Version: " .. ScriptVersion)
 print("Release Date: " .. ReleaseDate)
 print("Discord: " .. DiscordHandle)
 print("----------//----------")
+
