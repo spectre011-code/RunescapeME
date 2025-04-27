@@ -1,6 +1,6 @@
 ScriptName = "AIO Agility"
 Author = "Spectre011"
-ScriptVersion = "2.2.0"
+ScriptVersion = "2.2.1"
 ReleaseDate = "06-09-2024"
 DiscordHandle = "not_spectre011"
 
@@ -59,6 +59,8 @@ v2.1.0 - 27-04-2025
     - Removed print memory usage from main loop
 v2.2.0 - 27-04-2025
     - Changed logic for wildy course
+v2.2.1 - 27-04-2025
+    - Decreased anim check interval for wildy course
 
 Move to the starting location of the circuit and set the course]]
 
@@ -596,30 +598,30 @@ local stageFunctions = {
                 ExitHole()
             end
 
-            if API.IsPlayerAnimating_(API.GetLocalPlayerName(), 15) then
+            if API.IsPlayerAnimating_(API.GetLocalPlayerName(), 3) then
                 return
             end
 
             SetCurrentObstacle()
             if currentWildernessObstacle == 1 then
                 API.DoAction_Object1(0xb5,API.OFF_ACT_GeneralObject_route0,{obstacles[1].id},50)
-                UTILS.randomSleep(2000)
+                UTILS.randomSleep(1000)
                 API.WaitUntilMovingEnds()
             elseif currentWildernessObstacle == 2 then
                 API.DoAction_Object1(0xb5,API.OFF_ACT_GeneralObject_route0,{obstacles[2].id},50)
-                UTILS.randomSleep(2000)
+                UTILS.randomSleep(1000)
                 API.WaitUntilMovingEnds()
             elseif currentWildernessObstacle == 3 then
                 API.DoAction_Object1(0xb5,API.OFF_ACT_GeneralObject_route0,{obstacles[3].id},50)
-                UTILS.randomSleep(2000)
+                UTILS.randomSleep(1000)
                 API.WaitUntilMovingEnds()
             elseif currentWildernessObstacle == 4 then
                 API.DoAction_Object1(0xb5,API.OFF_ACT_GeneralObject_route0,{obstacles[4].id},50)
-                UTILS.randomSleep(2000)
+                UTILS.randomSleep(1000)
                 API.WaitUntilMovingEnds()
             elseif currentWildernessObstacle == 5 then
                 API.DoAction_Object1(0xb5,API.OFF_ACT_GeneralObject_route0,{obstacles[5].id},50)
-                UTILS.randomSleep(2000)
+                UTILS.randomSleep(1000)
                 API.WaitUntilMovingEnds()
             end
             CheckHealth()
