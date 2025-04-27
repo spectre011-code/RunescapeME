@@ -1,6 +1,6 @@
 ScriptName = "AIO Agility"
 Author = "Spectre011"
-ScriptVersion = "2.1.0"
+ScriptVersion = "2.2.0"
 ReleaseDate = "06-09-2024"
 DiscordHandle = "not_spectre011"
 
@@ -57,6 +57,8 @@ v2.1.0 - 27-04-2025
     - Fixed Obstacle ID status in UI for wildy course
     - Added an extended anim check after each obstacle in wildy course
     - Removed print memory usage from main loop
+v2.2.0 - 27-04-2025
+    - Changed logic for wildy course
 
 Move to the starting location of the circuit and set the course]]
 
@@ -547,6 +549,34 @@ local stageFunctions = {
                 UTILS.randomSleep(1000)
             end
         end
+
+        local function IsPlayerAtCoords(x, y, z)
+            local coord = API.PlayerCoord()
+            if x == coord.x and y == coord.y and z == coord.z then
+                return true
+            else
+                return false
+            end
+        end
+        
+        local function SetCurrentObstacle()
+            if IsPlayerAtCoords(obstacles[1].finalCoords[1], obstacles[1].finalCoords[2], 0) then
+                currentWildernessObstacle = 2
+            end
+            if IsPlayerAtCoords(obstacles[2].finalCoords[1], obstacles[2].finalCoords[2], 0) then
+                currentWildernessObstacle = 3
+            end
+            if IsPlayerAtCoords(obstacles[3].finalCoords[1], obstacles[3].finalCoords[2], 0) then
+                currentWildernessObstacle = 4
+            end
+            if IsPlayerAtCoords(obstacles[4].finalCoords[1], obstacles[4].finalCoords[2], 0) then
+                currentWildernessObstacle = 5
+            end
+            if IsPlayerAtCoords(obstacles[5].finalCoords[1], obstacles[5].finalCoords[2], 0) or IsPlayerAtCoords(2994, 3935, 0) then
+                currentWildernessObstacle = 1
+            end
+        end
+
         if playerInCorrectArea == nil then
             if API.PInArea21(2991, 3006, 3931, 3937) then
                 playerInCorrectArea = true          
@@ -558,139 +588,39 @@ local stageFunctions = {
             end
         end
         if playerInCorrectArea then
+            if API.IsPlayerMoving_(API.GetLocalPlayerName()) then
+                return
+            end
+
+            if FellInHole() then
+                ExitHole()
+            end
+
+            if API.IsPlayerAnimating_(API.GetLocalPlayerName(), 15) then
+                return
+            end
+
+            SetCurrentObstacle()
             if currentWildernessObstacle == 1 then
-                -- obstacle pipe
-                print("Attempting to overcome obstacle 1 (pipe)...")
-                UpdateStatus(obstacles[1].id)
-                UTILS.randomSleep(1000)
                 API.DoAction_Object1(0xb5,API.OFF_ACT_GeneralObject_route0,{obstacles[1].id},50)
-                while API.Read_LoopyLoop() and API.IsPlayerAnimating_(API.GetLocalPlayerName(), 30) do
-                    print("Checking anim")
-                    API.RandomSleep2(3000, 300, 300)
-                end
-                local tries = 0
-                while API.Read_LoopyLoop() and not isPlayerAtCoords(obstacles[1].finalCoords[1], obstacles[1].finalCoords[2]) do
-                    UTILS.randomSleep(1000)
-                    if tries > 5 then
-                        API.DoAction_Object1(0xb5,API.OFF_ACT_GeneralObject_route0,{obstacles[1].id},50)
-                        tries = 0
-                    end
-                    tries = tries + 1  
-                end
-                currentWildernessObstacle = 2
+                UTILS.randomSleep(2000)
+                API.WaitUntilMovingEnds()
             elseif currentWildernessObstacle == 2 then
-                -- ropeswing
-                print("Attempting to overcome obstacle 2 (ropeswing)...")
-                UpdateStatus(obstacles[2].id)
-                UTILS.randomSleep(1000)
-                print(obstacles[2].finalCoords[1])
-                print(obstacles[2].finalCoords[2])
                 API.DoAction_Object1(0xb5,API.OFF_ACT_GeneralObject_route0,{obstacles[2].id},50)
-                while API.Read_LoopyLoop() and API.IsPlayerAnimating_(API.GetLocalPlayerName(), 30) do
-                    print("Checking anim")
-                    API.RandomSleep2(3000, 300, 300)
-                end
-                local tries = 0
-                while API.Read_LoopyLoop() and not isPlayerAtCoords(obstacles[2].finalCoords[1], obstacles[2].finalCoords[2]) do
-                    if FellInHole() then
-                        break
-                    end
-                    UTILS.randomSleep(1000)
-                    if tries > 5 then
-                        API.DoAction_Object1(0xb5,API.OFF_ACT_GeneralObject_route0,{obstacles[2].id},50)
-                        tries = 0
-                    end
-                    tries = tries + 1 
-                end
-                if FellInHole() then
-                    ExitHole()
-                    while API.Read_LoopyLoop() and not isPlayerAtCoords(3005, 3953) do
-                        API.DoAction_Tile(WPOINT.new(3005,3953,0))
-                        UTILS.randomSleep(1000)
-                    end
-                    return
-                end
-                currentWildernessObstacle = 3
-
+                UTILS.randomSleep(2000)
+                API.WaitUntilMovingEnds()
             elseif currentWildernessObstacle == 3 then
-                -- stepping stone
-                print("Attempting to overcome obstacle 3 (stepping stone)...")
-                UpdateStatus(obstacles[3].id)
-                UTILS.randomSleep(1000)
                 API.DoAction_Object1(0xb5,API.OFF_ACT_GeneralObject_route0,{obstacles[3].id},50)
-                while API.Read_LoopyLoop() and API.IsPlayerAnimating_(API.GetLocalPlayerName(), 30) do
-                    print("Checking anim")
-                    API.RandomSleep2(3000, 300, 300)
-                end
-                local tries = 0
-                while API.Read_LoopyLoop() and not isPlayerAtCoords(obstacles[3].finalCoords[1], obstacles[3].finalCoords[2]) do
-                    if API.PlayerCoord().y > 3960 then
-                        break
-                    end
-                    UTILS.randomSleep(1000)
-                    if tries > 5 then
-                        API.DoAction_Object1(0xb5,API.OFF_ACT_GeneralObject_route0,{obstacles[3].id},50)
-                        tries = 0
-                    end
-                    tries = tries + 1 
-                end
-                if API.PlayerCoord().y > 3960 then
-                    return
-                end
-                
-                currentWildernessObstacle = 4
-
+                UTILS.randomSleep(2000)
+                API.WaitUntilMovingEnds()
             elseif currentWildernessObstacle == 4 then
-                -- log balance
-                print("Attempting to overcome obstacle 4 (log balance)...")
-                UpdateStatus(obstacles[4].id)
-                UTILS.randomSleep(1000)
                 API.DoAction_Object1(0xb5,API.OFF_ACT_GeneralObject_route0,{obstacles[4].id},50)
-                while API.Read_LoopyLoop() and API.IsPlayerAnimating_(API.GetLocalPlayerName(), 30) do
-                    print("Checking anim")
-                    API.RandomSleep2(3000, 300, 300)
-                end
-                local tries = 0
-                while API.Read_LoopyLoop() and not isPlayerAtCoords(obstacles[4].finalCoords[1], obstacles[4].finalCoords[2]) do
-                    if FellInHole() then
-                        break
-                    end
-                    UTILS.randomSleep(1000)
-                    if tries > 5 then
-                        API.DoAction_Object1(0xb5,API.OFF_ACT_GeneralObject_route0,{obstacles[4].id},50)
-                        tries = 0
-                    end
-                    tries = tries + 1 
-                end
-                if FellInHole() then
-                    ExitHole()
-                    while API.Read_LoopyLoop() and not isPlayerAtCoords(3001, 3946) do
-                        API.DoAction_Tile(WPOINT.new(3001,3946,0))
-                        UTILS.randomSleep(1000)
-                    end
-                    return
-                end
-                currentWildernessObstacle = 5
-
+                UTILS.randomSleep(2000)
+                API.WaitUntilMovingEnds()
             elseif currentWildernessObstacle == 5 then
-                -- cliff side
-                print("Attempting to overcome obstacle 5 (cliff side)...")
-                UpdateStatus(obstacles[5].id)
                 API.DoAction_Object1(0xb5,API.OFF_ACT_GeneralObject_route0,{obstacles[5].id},50)
-                while API.Read_LoopyLoop() and API.IsPlayerAnimating_(API.GetLocalPlayerName(), 30) do
-                    print("Checking anim")
-                    API.RandomSleep2(3000, 300, 300)
-                end
-                local tries = 0
-                while API.Read_LoopyLoop() and not API.PInArea21(2991, 3006, 3931, 3937) do
-                    UTILS.randomSleep(1000)
-                    if tries > 5 then
-                        API.DoAction_Object1(0xb5,API.OFF_ACT_GeneralObject_route0,{obstacles[5].id},50)
-                        tries = 0
-                    end
-                    tries = tries + 1 
-                end
-                currentWildernessObstacle = 1
+                UTILS.randomSleep(2000)
+                API.WaitUntilMovingEnds()
             end
             CheckHealth()
         end
