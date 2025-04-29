@@ -1,6 +1,6 @@
 ScriptName = "Archaeology Tutorial"
 Author = "Spectre011"
-ScriptVersion = "2.0.0"
+ScriptVersion = "2.0.1"
 ReleaseDate = "22-10-2024"
 DiscordHandle = "not_spectre011"
 
@@ -15,6 +15,8 @@ v1.2 - 14-13-2025
 v2.0.0 - 31-03-2025
     - Adopted SemVer 
     - Changed Discord variable name to DiscordHandle
+v2.0.0.1 29-04-2025
+    - Fixed step 96 where the soil box was not being claimed from Ezreal shop
 ]]
 
 local API = require("api")
@@ -344,9 +346,9 @@ while (API.Read_LoopyLoop()) do
             Sleep(1)
         end
         Sleep(1.2)
-        API.DoAction_Interface(0x24,0xffffffff,1,1594,19,0,API.OFF_ACT_GeneralInterface_route) -- Claim soil box
+        API.DoAction_Interface(0x24,0xffffffff,1,1594,23,0,API.OFF_ACT_GeneralInterface_route)-- Claim soil box
         Sleep(1.2)
-        API.DoAction_Interface(0x24,0xffffffff,1,1594,54,-1,API.OFF_ACT_GeneralInterface_route) --Confirm
+        API.DoAction_Interface(0x24,0xffffffff,1,1594,58,-1,API.OFF_ACT_GeneralInterface_route) --Confirm
         Sleep(1.2)
     elseif questProgress == 97 then
         print("Progress: 97/100 - Final dialog with Guildmaster2")
