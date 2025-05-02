@@ -1,6 +1,6 @@
 ScriptName = "Bank toolbox"
 Author = "Spectre011"
-ScriptVersion = "1.0.2"
+ScriptVersion = "1.0.3"
 ReleaseDate = "05-02-2025"
 DiscordHandle = "not_spectre011"
 
@@ -12,6 +12,9 @@ v1.0.1 - 05-02-2025
     - Forgot to add changelog.
 v1.0.2 - 05-02-2025
     - Renamed some functions to be more similar to other ME functions
+v1.0.3 - 05-02-2025
+    - More renames
+    - Removed empty lines
 ]]
 
 local API = require("api")
@@ -44,8 +47,6 @@ local CollectionBoxSlots = { -- https://imgur.com/WN60RRo
     { { 109,37,-1,0 }, { 109,39,-1,0 }, { 109,27,-1,0 }, { 109,67,-1,0 }, { 109,67,1,0 } }, -- Slot 15
     { { 109,37,-1,0 }, { 109,39,-1,0 }, { 109,27,-1,0 }, { 109,67,-1,0 }, { 109,67,3,0 } } -- Slot 16
 }
-
-
 
 --This gets the name of the items
 --[[
@@ -225,7 +226,7 @@ end
 
 -- Check if Deposit box interface is open.
 ---@return boolean
-function BANK.IsDepositBoxInterfaceOpen()
+function BANK.IsDepositBoxOpen()
     if API.VB_FindPSettinOrder(2874, 0).state == 69 then
         print("[BANK] Deposit box interface open.")
         return true
