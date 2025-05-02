@@ -1,6 +1,6 @@
 ScriptName = "Bank toolbox"
 Author = "Spectre011"
-ScriptVersion = "1.0.1"
+ScriptVersion = "1.0.2"
 ReleaseDate = "05-02-2025"
 DiscordHandle = "not_spectre011"
 
@@ -10,6 +10,8 @@ v1.0 - 05-02-2025
     - Initial release.
 v1.0.1 - 05-02-2025
     - Forgot to add changelog.
+v1.0.2 - 05-02-2025
+    - Renamed some functions to be more similar to other ME functions
 ]]
 
 local API = require("api")
@@ -75,7 +77,7 @@ local CollectionBoxSlots = { -- https://imgur.com/WN60RRo
 
 -- Attempts to open your bank using the listed options. Requires cache enabled https://imgur.com/5I9a46V
 ---@return boolean
-function BANK.OpenBank()
+function BANK.Open()
     print("[BANK] Opening bank.")
     if Interact:NPC("Banker", "Bank", 50) then
         print("[BANK] Banker succeded.")
@@ -211,7 +213,7 @@ end
 
 -- Check if Bank interface is open.
 ---@return boolean
-function BANK.IsBankInterfaceOpen()
+function BANK.IsOpen()
     if API.VB_FindPSettinOrder(2874, 0).state == 24 then
         print("[BANK] Bank interface open.")
         return true
@@ -269,7 +271,7 @@ end
 -- Check if there is a specific item to collect.
 ---@param itemID number
 ---@return boolean
-function BANK.HasItemToCollect(itemID)
+function BANK.CollectContains(itemID)
     local FoundItem = false
 
     for i = 1, 16 do
@@ -317,7 +319,7 @@ end
 -- Checks if inventory has item
 ---@param ItemID number
 ---@return boolean
-function BANK.InventoryHasItem(ItemID)
+function BANK.InventoryContains(ItemID)
     if type(ItemID) ~= "number" then
         print("[BANK] Error: Expected a number, got "..tostring(ItemID).." ("..type(ItemID)..")")
         return false
@@ -348,7 +350,7 @@ end
 -- Checks if item is equipped
 ---@param ItemID number
 ---@return boolean
-function BANK.HasItemEquipped(ItemID)
+function BANK.IsEquipped(ItemID)
     if type(ItemID) ~= "number" then
         print("[BANK] Error: Expected a number, got "..tostring(ItemID).." ("..type(ItemID)..")")
         return false
@@ -379,7 +381,7 @@ end
 -- Checks if bank has item
 ---@param ItemID number
 ---@return boolean
-function BANK.BankHasItem(ItemID)
+function BANK.Contains(ItemID)
     if type(ItemID) ~= "number" then
         print("[BANK] Error: Expected a number, got "..tostring(ItemID).." ("..type(ItemID)..")")
         return false
@@ -887,7 +889,7 @@ end
 -- Withdraws item(s) from your bank. The amount is set with BANK.SetQuantity(Qtitty)
 ---@param ItemID number|table
 ---@return boolean
-function BANK.WithdrawItem(ItemID)
+function BANK.Withdraw(ItemID)
     BANK.OpenTab(1)
     local Items = API.Container_Get_all(95)
     local success = true
@@ -897,7 +899,7 @@ function BANK.WithdrawItem(ItemID)
         local ItemIDHex = string.format("0x%X", ItemID)
         local slot = nil
 
-        if not BANK.BankHasItem(ItemID) then
+        if not BANK.Contains(ItemID) then
             return false
         end
 
@@ -920,7 +922,7 @@ function BANK.WithdrawItem(ItemID)
     -- Handle table of items case
     elseif type(ItemID) == "table" then
         for _, id in ipairs(ItemID) do
-            local currentSuccess = BANK.WithdrawItem(id)
+            local currentSuccess = BANK.Withdraw(id)
             if not currentSuccess then
                 success = false
             end
@@ -935,7 +937,7 @@ end
 -- Deposits item(s) into your bank. The amount is set with BANK.SetQuantity(Qtitty)
 ---@param ItemID number|table
 ---@return boolean
-function BANK.DepositItem(ItemID)
+function BANK.Deposit(ItemID)
     BANK.OpenTab(1)
     local Items = API.Container_Get_all(93)
     local success = true
@@ -945,7 +947,7 @@ function BANK.DepositItem(ItemID)
         local ItemIDHex = string.format("0x%X", ItemID)
         local slot = nil
 
-        if not BANK.InventoryHasItem(ItemID) then
+        if not BANK.InventoryContains(ItemID) then
             return false
         end
 
@@ -968,7 +970,7 @@ function BANK.DepositItem(ItemID)
     -- Handle table of items case
     elseif type(ItemID) == "table" then
         for _, id in ipairs(ItemID) do
-            local currentSuccess = BANK.DepositItem(id)
+            local currentSuccess = BANK.Deposit(id)
             if not currentSuccess then
                 success = false
             end
@@ -983,14 +985,14 @@ end
 -- Equips an item from your bank.
 ---@param ItemID number
 ---@return boolean
-function BANK.EquipItem(ItemID)
+function BANK.Equip(ItemID)
     local Items = API.Container_Get_all(95)
     BANK.OpenTab(3)
 
     local ItemIDHex = string.format("0x%X", ItemID)
     local slot = nil
 
-    if not BANK.BankHasItem(ItemID) then
+    if not BANK.Contains(ItemID) then
         return false
     end
 
@@ -1014,7 +1016,7 @@ end
 -- Withdraws item(s) from your bank to your beast of burden. The amount is set with BANK.SetQuantity(Qtitty)
 ---@param ItemID number|table
 ---@return boolean
-function BANK.WithdrawItemToBoB(ItemID)
+function BANK.WithdrawToBoB(ItemID)
     BANK.OpenTab(2)
     local Items = API.Container_Get_all(95)
     local success = true
@@ -1024,7 +1026,7 @@ function BANK.WithdrawItemToBoB(ItemID)
         local ItemIDHex = string.format("0x%X", ItemID)
         local slot = nil
 
-        if not BANK.BankHasItem(ItemID) then
+        if not BANK.Contains(ItemID) then
             return false
         end
 
@@ -1047,7 +1049,7 @@ function BANK.WithdrawItemToBoB(ItemID)
     -- Handle table of items case
     elseif type(ItemID) == "table" then
         for _, id in ipairs(ItemID) do
-            local currentSuccess = BANK.WithdrawItem(id)
+            local currentSuccess = BANK.Withdraw(id)
             if not currentSuccess then
                 success = false
             end
