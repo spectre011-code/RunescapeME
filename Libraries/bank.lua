@@ -1,8 +1,16 @@
 ScriptName = "Bank toolbox"
 Author = "Spectre011"
-ScriptVersion = "1.0.0"
+ScriptVersion = "1.0.1"
 ReleaseDate = "05-02-2025"
 DiscordHandle = "not_spectre011"
+
+--[[
+Changelog:
+v1.0 - 05-02-2025
+    - Initial release.
+v1.0.1 - 05-02-2025
+    - Forgot to add changelog.
+]]
 
 local API = require("api")
 
