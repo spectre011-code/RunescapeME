@@ -1,12 +1,12 @@
 ScriptName = "Restless Ghost Quest"
 Author = "Spectre011"
-ScriptVersion = "1.0"
+ScriptVersion = "1.0.0"
 ReleaseDate = "05-03-2025"
 DiscordHandle = "not_spectre011"
 
 --[[
 Changelog:
-v1.0 - 05-03-2025
+v1.0.0 - 05-03-2025
     - Initial release.
 ]]
 
