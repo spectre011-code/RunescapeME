@@ -314,6 +314,18 @@ while (API.Read_LoopyLoop()) do
                 end
             end
 
+            QUEST.Sleep(5)
+
+            QUEST.WaitForDialogBox(15)
+
+            while API.Read_LoopyLoop() and QUEST.DialogBoxOpen() do
+                if QUEST.HasOption() then
+                    QUEST.OptionSelector(DialogOptions)
+                else
+                    QUEST.PressSpace()
+                end
+            end
+
         elseif step == 5 then -- Quest completed
             print("Step 5/5")
             UpdateStatus("Step 5/5")
