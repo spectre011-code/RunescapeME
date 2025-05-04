@@ -1,3 +1,15 @@
+local ScriptName = "Quest toolbox"
+local Author = "Spectre011"
+local ScriptVersion = "1.0.0"
+local ReleaseDate = "03-05-2025"
+local DiscordHandle = "not_spectre011"
+
+--[[
+Changelog:
+v1.0 - 03-05-2025
+    - Initial release.
+]]
+
 local API = require("api")
 
 local QUEST = {}
