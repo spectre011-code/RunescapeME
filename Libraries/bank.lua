@@ -1,20 +1,35 @@
-ScriptName = "Bank toolbox"
-Author = "Spectre011"
-ScriptVersion = "1.0.3"
-ReleaseDate = "05-02-2025"
-DiscordHandle = "not_spectre011"
+local ScriptName = "Bank toolbox"
+local Author = "Spectre011"
+local ScriptVersion = "1.0.4"
+local ReleaseDate = "02-05-2025"
+local DiscordHandle = "not_spectre011"
 
 --[[
 Changelog:
-v1.0 - 05-02-2025
+v1.0 - 02-05-2025
     - Initial release.
-v1.0.1 - 05-02-2025
+v1.0.1 - 02-05-2025
     - Forgot to add changelog.
-v1.0.2 - 05-02-2025
+v1.0.2 - 02-05-2025
     - Renamed some functions to be more similar to other ME functions
-v1.0.3 - 05-02-2025
+v1.0.3 - 02-05-2025
     - More renames
     - Removed empty lines
+v1.0.4 - 04-05-2025
+    - Edited credits variables to be local to prevent some funny interactions with my other scripts.
+    - Added functions: 
+        BANK.GetTransferTab()
+        BANK.SetTransferTab()
+        BANK.PresetSettingsIsOpen()
+        BANK.PresetSettingsOpen()
+        BANK.PresetSettingsReturnToBank(),
+        BANK.PresetSettingsGetSelectedPreset()
+        BANK.PresetSettingsSelectPreset()
+        BANK.PresetSettingsGetInventory()
+        BANK.PresetSettingsGetEquipment()
+        BANK.PrintInventory()
+    - Edited relevant functions to check for transfer/preset tabs.
+    - Edited some prints to be more descriptive.
 ]]
 
 local API = require("api")
@@ -75,6 +90,53 @@ local CollectionBoxSlots = { -- https://imgur.com/WN60RRo
     { { 109,37,-1,0 }, { 109,39,-1,0 }, { 109,27,-1,0 }, { 109,67,-1,0 }, { 109,67,0,0 } }, -- Slot 15
     { { 109,37,-1,0 }, { 109,39,-1,0 }, { 109,27,-1,0 }, { 109,67,-1,0 }, { 109,67,2,0 } } -- Slot 16
 }]]
+
+local PresetSettingsInventory = { 
+    { { 517,0,-1,0 }, { 517,2,-1,0 }, { 517,153,-1,0 }, { 517,261,-1,0 }, { 517,262,-1,0 }, { 517,277,-1,0 }, { 517,280,-1,0 }, { 517,280,0,0 } },
+    { { 517,0,-1,0 }, { 517,2,-1,0 }, { 517,153,-1,0 }, { 517,261,-1,0 }, { 517,262,-1,0 }, { 517,277,-1,0 }, { 517,280,-1,0 }, { 517,280,1,0 } },
+    { { 517,0,-1,0 }, { 517,2,-1,0 }, { 517,153,-1,0 }, { 517,261,-1,0 }, { 517,262,-1,0 }, { 517,277,-1,0 }, { 517,280,-1,0 }, { 517,280,2,0 } },
+    { { 517,0,-1,0 }, { 517,2,-1,0 }, { 517,153,-1,0 }, { 517,261,-1,0 }, { 517,262,-1,0 }, { 517,277,-1,0 }, { 517,280,-1,0 }, { 517,280,3,0 } },
+    { { 517,0,-1,0 }, { 517,2,-1,0 }, { 517,153,-1,0 }, { 517,261,-1,0 }, { 517,262,-1,0 }, { 517,277,-1,0 }, { 517,280,-1,0 }, { 517,280,4,0 } },
+    { { 517,0,-1,0 }, { 517,2,-1,0 }, { 517,153,-1,0 }, { 517,261,-1,0 }, { 517,262,-1,0 }, { 517,277,-1,0 }, { 517,280,-1,0 }, { 517,280,5,0 } },
+    { { 517,0,-1,0 }, { 517,2,-1,0 }, { 517,153,-1,0 }, { 517,261,-1,0 }, { 517,262,-1,0 }, { 517,277,-1,0 }, { 517,280,-1,0 }, { 517,280,6,0 } },
+    { { 517,0,-1,0 }, { 517,2,-1,0 }, { 517,153,-1,0 }, { 517,261,-1,0 }, { 517,262,-1,0 }, { 517,277,-1,0 }, { 517,280,-1,0 }, { 517,280,7,0 } },
+    { { 517,0,-1,0 }, { 517,2,-1,0 }, { 517,153,-1,0 }, { 517,261,-1,0 }, { 517,262,-1,0 }, { 517,277,-1,0 }, { 517,280,-1,0 }, { 517,280,8,0 } },
+    { { 517,0,-1,0 }, { 517,2,-1,0 }, { 517,153,-1,0 }, { 517,261,-1,0 }, { 517,262,-1,0 }, { 517,277,-1,0 }, { 517,280,-1,0 }, { 517,280,9,0 } },
+    { { 517,0,-1,0 }, { 517,2,-1,0 }, { 517,153,-1,0 }, { 517,261,-1,0 }, { 517,262,-1,0 }, { 517,277,-1,0 }, { 517,280,-1,0 }, { 517,280,10,0 } },
+    { { 517,0,-1,0 }, { 517,2,-1,0 }, { 517,153,-1,0 }, { 517,261,-1,0 }, { 517,262,-1,0 }, { 517,277,-1,0 }, { 517,280,-1,0 }, { 517,280,11,0 } },
+    { { 517,0,-1,0 }, { 517,2,-1,0 }, { 517,153,-1,0 }, { 517,261,-1,0 }, { 517,262,-1,0 }, { 517,277,-1,0 }, { 517,280,-1,0 }, { 517,280,12,0 } },
+    { { 517,0,-1,0 }, { 517,2,-1,0 }, { 517,153,-1,0 }, { 517,261,-1,0 }, { 517,262,-1,0 }, { 517,277,-1,0 }, { 517,280,-1,0 }, { 517,280,13,0 } },
+    { { 517,0,-1,0 }, { 517,2,-1,0 }, { 517,153,-1,0 }, { 517,261,-1,0 }, { 517,262,-1,0 }, { 517,277,-1,0 }, { 517,280,-1,0 }, { 517,280,14,0 } },
+    { { 517,0,-1,0 }, { 517,2,-1,0 }, { 517,153,-1,0 }, { 517,261,-1,0 }, { 517,262,-1,0 }, { 517,277,-1,0 }, { 517,280,-1,0 }, { 517,280,15,0 } },
+    { { 517,0,-1,0 }, { 517,2,-1,0 }, { 517,153,-1,0 }, { 517,261,-1,0 }, { 517,262,-1,0 }, { 517,277,-1,0 }, { 517,280,-1,0 }, { 517,280,16,0 } },
+    { { 517,0,-1,0 }, { 517,2,-1,0 }, { 517,153,-1,0 }, { 517,261,-1,0 }, { 517,262,-1,0 }, { 517,277,-1,0 }, { 517,280,-1,0 }, { 517,280,17,0 } },
+    { { 517,0,-1,0 }, { 517,2,-1,0 }, { 517,153,-1,0 }, { 517,261,-1,0 }, { 517,262,-1,0 }, { 517,277,-1,0 }, { 517,280,-1,0 }, { 517,280,18,0 } },
+    { { 517,0,-1,0 }, { 517,2,-1,0 }, { 517,153,-1,0 }, { 517,261,-1,0 }, { 517,262,-1,0 }, { 517,277,-1,0 }, { 517,280,-1,0 }, { 517,280,19,0 } },
+    { { 517,0,-1,0 }, { 517,2,-1,0 }, { 517,153,-1,0 }, { 517,261,-1,0 }, { 517,262,-1,0 }, { 517,277,-1,0 }, { 517,280,-1,0 }, { 517,280,20,0 } },
+    { { 517,0,-1,0 }, { 517,2,-1,0 }, { 517,153,-1,0 }, { 517,261,-1,0 }, { 517,262,-1,0 }, { 517,277,-1,0 }, { 517,280,-1,0 }, { 517,280,21,0 } },
+    { { 517,0,-1,0 }, { 517,2,-1,0 }, { 517,153,-1,0 }, { 517,261,-1,0 }, { 517,262,-1,0 }, { 517,277,-1,0 }, { 517,280,-1,0 }, { 517,280,22,0 } },
+    { { 517,0,-1,0 }, { 517,2,-1,0 }, { 517,153,-1,0 }, { 517,261,-1,0 }, { 517,262,-1,0 }, { 517,277,-1,0 }, { 517,280,-1,0 }, { 517,280,23,0 } },
+    { { 517,0,-1,0 }, { 517,2,-1,0 }, { 517,153,-1,0 }, { 517,261,-1,0 }, { 517,262,-1,0 }, { 517,277,-1,0 }, { 517,280,-1,0 }, { 517,280,24,0 } },
+    { { 517,0,-1,0 }, { 517,2,-1,0 }, { 517,153,-1,0 }, { 517,261,-1,0 }, { 517,262,-1,0 }, { 517,277,-1,0 }, { 517,280,-1,0 }, { 517,280,25,0 } },
+    { { 517,0,-1,0 }, { 517,2,-1,0 }, { 517,153,-1,0 }, { 517,261,-1,0 }, { 517,262,-1,0 }, { 517,277,-1,0 }, { 517,280,-1,0 }, { 517,280,26,0 } },
+    { { 517,0,-1,0 }, { 517,2,-1,0 }, { 517,153,-1,0 }, { 517,261,-1,0 }, { 517,262,-1,0 }, { 517,277,-1,0 }, { 517,280,-1,0 }, { 517,280,27,0 } }
+}
+
+local PresetSettingsEquipment = {
+    { { 517,0,-1,0 }, { 517,2,-1,0 }, { 517,153,-1,0 }, { 517,261,-1,0 }, { 517,262,-1,0 }, { 517,281,-1,0 }, { 517,283,-1,0 }, { 517,284,-1,0 }, { 517,286,-1,0 }, { 517,290,-1,0 }, { 517,290,0,0 } },
+    { { 517,0,-1,0 }, { 517,2,-1,0 }, { 517,153,-1,0 }, { 517,261,-1,0 }, { 517,262,-1,0 }, { 517,281,-1,0 }, { 517,283,-1,0 }, { 517,284,-1,0 }, { 517,286,-1,0 }, { 517,290,-1,0 }, { 517,290,1,0 } },
+    { { 517,0,-1,0 }, { 517,2,-1,0 }, { 517,153,-1,0 }, { 517,261,-1,0 }, { 517,262,-1,0 }, { 517,281,-1,0 }, { 517,283,-1,0 }, { 517,284,-1,0 }, { 517,286,-1,0 }, { 517,290,-1,0 }, { 517,290,2,0 } },
+    { { 517,0,-1,0 }, { 517,2,-1,0 }, { 517,153,-1,0 }, { 517,261,-1,0 }, { 517,262,-1,0 }, { 517,281,-1,0 }, { 517,283,-1,0 }, { 517,284,-1,0 }, { 517,286,-1,0 }, { 517,290,-1,0 }, { 517,290,3,0 } },
+    { { 517,0,-1,0 }, { 517,2,-1,0 }, { 517,153,-1,0 }, { 517,261,-1,0 }, { 517,262,-1,0 }, { 517,281,-1,0 }, { 517,283,-1,0 }, { 517,284,-1,0 }, { 517,286,-1,0 }, { 517,290,-1,0 }, { 517,290,4,0 } },
+    { { 517,0,-1,0 }, { 517,2,-1,0 }, { 517,153,-1,0 }, { 517,261,-1,0 }, { 517,262,-1,0 }, { 517,281,-1,0 }, { 517,283,-1,0 }, { 517,284,-1,0 }, { 517,286,-1,0 }, { 517,290,-1,0 }, { 517,290,5,0 } },
+    { { 517,0,-1,0 }, { 517,2,-1,0 }, { 517,153,-1,0 }, { 517,261,-1,0 }, { 517,262,-1,0 }, { 517,281,-1,0 }, { 517,283,-1,0 }, { 517,284,-1,0 }, { 517,286,-1,0 }, { 517,290,-1,0 }, { 517,290,7,0 } },
+    { { 517,0,-1,0 }, { 517,2,-1,0 }, { 517,153,-1,0 }, { 517,261,-1,0 }, { 517,262,-1,0 }, { 517,281,-1,0 }, { 517,283,-1,0 }, { 517,284,-1,0 }, { 517,286,-1,0 }, { 517,290,-1,0 }, { 517,290,9,0 } },
+    { { 517,0,-1,0 }, { 517,2,-1,0 }, { 517,153,-1,0 }, { 517,261,-1,0 }, { 517,262,-1,0 }, { 517,281,-1,0 }, { 517,283,-1,0 }, { 517,284,-1,0 }, { 517,286,-1,0 }, { 517,290,-1,0 }, { 517,290,10,0 } },
+    { { 517,0,-1,0 }, { 517,2,-1,0 }, { 517,153,-1,0 }, { 517,261,-1,0 }, { 517,262,-1,0 }, { 517,281,-1,0 }, { 517,283,-1,0 }, { 517,284,-1,0 }, { 517,286,-1,0 }, { 517,290,-1,0 }, { 517,290,12,0 } },
+    { { 517,0,-1,0 }, { 517,2,-1,0 }, { 517,153,-1,0 }, { 517,261,-1,0 }, { 517,262,-1,0 }, { 517,281,-1,0 }, { 517,283,-1,0 }, { 517,284,-1,0 }, { 517,286,-1,0 }, { 517,290,-1,0 }, { 517,290,13,0 } },
+    { { 517,0,-1,0 }, { 517,2,-1,0 }, { 517,153,-1,0 }, { 517,261,-1,0 }, { 517,262,-1,0 }, { 517,281,-1,0 }, { 517,283,-1,0 }, { 517,284,-1,0 }, { 517,286,-1,0 }, { 517,290,-1,0 }, { 517,290,14,0 } },
+    { { 517,0,-1,0 }, { 517,2,-1,0 }, { 517,153,-1,0 }, { 517,261,-1,0 }, { 517,262,-1,0 }, { 517,281,-1,0 }, { 517,283,-1,0 }, { 517,284,-1,0 }, { 517,286,-1,0 }, { 517,290,-1,0 }, { 517,290,17,0 } }
+}
 
 -- Attempts to open your bank using the listed options. Requires cache enabled https://imgur.com/5I9a46V
 ---@return boolean
@@ -490,26 +552,76 @@ function BANK.OpenTab(tabID)
     end
 end
 
+-- Get transfer or preset tab. 0 = transfer and 1 = preset
+---@return number|false
+function BANK.GetTransferTab()
+    local VB = API.VB_FindPSettinOrder(6680).state >> 12
+    if VB == 0 then
+        print("[BANK] Bank is showing transfer.")
+        return 0
+    elseif VB == 1 then
+        print("[BANK] Bank is showing preset.")
+        return 1
+    else
+        print("[BANK] Something went horribly wrong here. Send me a screenshot of the console on Discord: not_spectre011.")
+        print("Function: BANK.GetTransferTab()")
+        print("--------------------------")
+        print("VB Value: "..tostring(VB))
+        print("--------------------------")
+        return false
+    end
+end
+
+-- Set transfer or preset tab. 0 = transfer and 1 = preset
+---@param number number
+---@return boolean
+function BANK.SetTransferTab(number)
+    if tonumber(number) == 0 then
+        if BANK.GetTransferTab() ~= 0 then
+            print("[BANK] Opening transfer tab.")
+            API.DoAction_Interface(0x2e,0xffffffff,1,517,151,-1,API.OFF_ACT_GeneralInterface_route)
+            return true
+        else
+            return true
+        end
+    elseif tonumber(number) == 1 then
+        if BANK.GetTransferTab() ~= 1 then
+            print("[BANK] Opening preset tab.")
+            API.DoAction_Interface(0x2e,0xffffffff,1,517,152,-1,API.OFF_ACT_GeneralInterface_route)
+            return true
+        else
+            return true
+        end
+    else
+        print("[BANK] Something went horribly wrong here. Send me a screenshot of the console on Discord: not_spectre011.")
+        print("Function: BANK.SetTransferTab()")
+        print("--------------------------")
+        print("VB Value: "..tostring(number))
+        print("--------------------------")
+        return false
+    end
+end
+
 -- Retrieves the currently selected quantity option from the interface.
 ---@return number|string|boolean
 function BANK.GetQuantitySelected()
     local VB = API.VB_FindPSettinOrder(8958).state
 
     if VB == 50 then
-        print("[BANK] Quantity selected: 1")
+        print("[BANK] Current quantity selected: 1")
         return 1
     elseif VB == 51 then
-        print("[BANK] Quantity selected: 5")
+        print("[BANK] Current quantity selected: 5")
         return 5
     elseif VB == 52 then
-        print("[BANK] Quantity selected: 10")
+        print("[BANK] Current quantity selected: 10")
         return 10
     elseif VB == 53 then
         local XValue = API.VB_FindPSettinOrder(111).state
-        print("[BANK] Quantity selected: X (Custom Value: " .. tostring(XValue) .. ")")
+        print("[BANK] Current quantity selected: X (Custom Value: " .. tostring(XValue) .. ")")
         return "X"
     elseif VB == 55 then
-        print("[BANK] Quantity selected: All")
+        print("[BANK] Current quantity selected: All")
         return "All"
     elseif VB == 0 then
         print("[BANK] Could not read selected quantity.")
@@ -553,6 +665,8 @@ function BANK.SetQuantity(Qtitty)
             return false
         end
     end
+
+    BANK.SetTransferTab(0)
 
     if Qtitty == 1 then
         if BANK.GetQuantitySelected() ~= 1 then
@@ -639,6 +753,8 @@ function BANK.SetXQuantity(Qtitty)
         print("[BANK] X quantity already set to "..tostring(Qtitty)..".")
         return true
     end
+    
+    BANK.SetTransferTab(0)
 
     API.DoAction_Interface(0xffffffff,0xffffffff,1,517,114,-1,API.OFF_ACT_GeneralInterface_route)
     API.RandomSleep2(1000, 1000, 1000)
@@ -692,7 +808,7 @@ function BANK.SetNoteMode(boolean)
 
     if boolean == true then
         if BANK.IsNoteModeEnabled() then
-            print("[BANK] No action needed.")
+            print("[BANK] Note mode already enabled. No action needed.")
             return true
         else
             print("[BANK] Enabling note mode.")
@@ -701,7 +817,7 @@ function BANK.SetNoteMode(boolean)
         end
     elseif boolean == false then
         if not BANK.IsNoteModeEnabled() then
-            print("[BANK] No action needed.")
+            print("[BANK] Note mode already disabled. No action needed.")
             return true
         else
             print("[BANK] Disabling note mode.")
@@ -748,9 +864,11 @@ function BANK.SetPresetPage(number)
         return false
     end
 
+    BANK.SetTransferTab(1)
+
     if number == 1 then
         if BANK.GetPresetPage() == 1 then
-            print("[BANK] No action needed.")
+            print("[BANK] Preset page already 1. No action needed.")
             return true
         else
             print("[BANK] Changing preset page to 1.")
@@ -759,7 +877,7 @@ function BANK.SetPresetPage(number)
         end
     elseif number == 2 then
         if BANK.GetPresetPage() == 2 then
-            print("[BANK] No action needed.")
+            print("[BANK] Preset page already 2. No action needed.")
             return true
         else
             print("[BANK] Changing preset page to 2.")
@@ -791,6 +909,8 @@ function BANK.SavePreset(number)
         return false
     end
 
+    BANK.SetTransferTab(1)
+
     local slot = number
     if slot < 10 then
         BANK.SetPresetPage(1)
@@ -815,6 +935,7 @@ end
 ---@return boolean
 function BANK.SaveSummonPreset()
     print("[BANK] Saving beast of burden preset")
+    BANK.SetTransferTab(1)
     return API.DoAction_Interface(0xffffffff,0xffffffff,2,517,119,10,API.OFF_ACT_GeneralInterface_route)
 end
 
@@ -856,6 +977,7 @@ end
 ---@return boolean
 function BANK.LoadSummonPreset()
     print("[BANK] Loading beast of burden preset")
+    BANK.SetTransferTab(1)
     return API.DoAction_Interface(0x24,0xffffffff,1,517,119,10,API.OFF_ACT_GeneralInterface_route)
 end
 
@@ -1059,6 +1181,145 @@ function BANK.WithdrawToBoB(ItemID)
     else
         print("[BANK] Invalid input type for WithdrawItem. Expected number or table, got "..type(ItemID))
         return false
+    end
+end
+
+-- Check if preset settings interface is open.
+---@return boolean
+function BANK.PresetSettingsIsOpen()
+    local VB = API.VB_FindPSettinOrder(6680).state >> 20
+
+    if VB == 0 then
+        print("[BANK] Preset settings interface is not open.")
+        return false
+        
+    elseif VB == 1 then
+        print("[BANK] Preset settings interface is open.")
+        return true
+    else
+        print("[BANK] Something went horribly wrong here. Send me a screenshot of the console on Discord: not_spectre011.")
+        print("Function: BANK.PresetSettingsIsOpen()")
+        local var = API.VB_FindPSettinOrder(6680)
+        print("--------------------------")
+        print("state: " .. var.state)
+        print("addr: " .. var.addr)
+        print("indexaddr_orig: " .. var.indexaddr_orig)
+        print("id: " .. var.id)
+        print("--------------------------")
+        return false
+    end
+end
+
+-- Open preset settings interface.
+---@return boolean
+function BANK.PresetSettingsOpen()
+    if not BANK.PresetSettingsIsOpen() then
+        print("[BANK] Opening preset settings.")
+        API.DoAction_Interface(0x24,0xffffffff,1,517,119,0,API.OFF_ACT_GeneralInterface_route)
+        return true
+    else
+        print("[BANK] Preset settings interface is already open.")
+        return true
+    end
+    return false
+end
+
+-- Returns to bank.
+---@return boolean
+function BANK.PresetSettingsReturnToBank()
+    if BANK.PresetSettingsIsOpen() then
+        print("[BANK] Return to bank.")
+        API.DoAction_Interface(0xffffffff,0xffffffff,1,517,86,-1,API.OFF_ACT_GeneralInterface_route)
+        return true
+    else
+        print("[BANK] Bank interface already open.")
+        return true
+    end
+    return false
+end
+
+-- Returns selected preset from the preset settings interface.
+---@return number|false
+function BANK.PresetSettingsGetSelectedPreset()
+    if not BANK.PresetSettingsIsOpen() then
+        print("[BANK] Preset settings interface is not open. Open it first with BANK.PresetSettingsOpen()")
+        return false
+    end
+
+    local VB = API.VB_FindPSettinOrder(9932).state
+    print("[BANK] Selected preset: "..VB)
+    return tonumber(VB)
+end
+
+-- Select a preset (1-19). 19 is beast of burden
+---@param preset number
+---@return boolean
+function BANK.PresetSettingsSelectPreset(preset)
+    if type(preset) ~= "number" then
+        print("[BANK] Invalid preset type. Expected a number, got " .. type(preset))
+        return false
+    end
+
+    local slot = tonumber(preset)
+    if not slot or slot < 1 or slot > 19 then
+        print("[BANK] Invalid preset number. Must be between 1 and 19, got " .. tostring(preset))
+        return false
+    end
+
+    if BANK.PresetSettingsIsOpen() then
+        print("[BANK] Selecting preset " .. slot .. ".")
+        API.DoAction_Interface(0xffffffff, 0xffffffff, 1, 517, 268, slot, API.OFF_ACT_GeneralInterface_route)
+        return true
+    else
+        print("[BANK] Preset settings interface is not open. Open it first with BANK.PresetSettingsOpen().")
+        return false
+    end
+end
+
+---Get the itemID of all inventory slots inside the preset settings interface.
+---@return table|false
+function BANK.PresetSettingsGetInventory()
+    local inventory = {}
+
+    for i = 1, 28 do
+        local slot = API.ScanForInterfaceTest2Get(false, PresetSettingsInventory[i])[1]
+        if slot and slot.itemid1 then
+            table.insert(inventory, { index = i, itemid1 = slot.itemid1 })
+        end
+    end
+
+    if #inventory == 0 then
+        return false
+    end
+
+    return inventory
+end
+
+---Get the itemID of all equipment slots inside the preset settings interface.
+---@return table|false
+function BANK.PresetSettingsGetEquipment()
+    local equipment = {}
+
+    for i = 1, 13 do
+        local slot = API.ScanForInterfaceTest2Get(false, PresetSettingsEquipment[i])[1]
+        if slot and slot.itemid1 then
+            table.insert(equipment, { index = i, itemid1 = slot.itemid1 })
+        end
+    end
+
+    if #equipment == 0 then
+        return false
+    end
+
+    return equipment
+end
+
+---Prints the data from BANK.PresetSettingsGetInventory() and BANK.PresetSettingsGetEquipment().
+---@param inventory table
+function BANK.PrintInventory(inventory)
+    print("Contents:")
+    for _, item in ipairs(inventory) do
+        print(string.format("Slot %02d: Item ID = %d", item.index, item.itemid1))
     end
 end
 
