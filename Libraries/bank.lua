@@ -22,7 +22,7 @@ v1.0.4 - 04-05-2025
         BANK.SetTransferTab()
         BANK.PresetSettingsIsOpen()
         BANK.PresetSettingsOpen()
-        BANK.PresetSettingsReturnToBank(),
+        BANK.PresetSettingsReturnToBank()
         BANK.PresetSettingsGetSelectedPreset()
         BANK.PresetSettingsSelectPreset()
         BANK.PresetSettingsGetInventory()
