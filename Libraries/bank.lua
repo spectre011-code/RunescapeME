@@ -1,4 +1,4 @@
-local ScriptName = "Bank toolbox"
+local ScriptName = "Bank Toolbox"
 local Author = "Spectre011"
 local ScriptVersion = "1.0.4"
 local ReleaseDate = "02-05-2025"
