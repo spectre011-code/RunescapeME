@@ -35,7 +35,8 @@ v1.0.5 - 06-05-2025
     Modified tables to be inside the BANK table.
     Modified functions to use the tables with the atribute self.
     Modified functions BANK:PresetSettingsGetEquipment() and BANK:PresetSettingsGetInventory() to include the item name.
-    Added function BANK:PresetSettingsCheckBoxEnabled().
+    Added function BANK:PresetSettingsGetCheckBox().
+    Added function BANK:PresetSettingsSetCheckBox().
     Renamed some function to be more descriptive of their class.
     Reordered function by class:
         General bank
@@ -1370,10 +1371,12 @@ function BANK:PresetSettingsGetEquipment()
     return equipment
 end
 
+--[[BROKEN]]
+--[[
 ---Checks if a specific checkbox is enabled in the bank preset settings. Valid options are "Inventory", "Equipment", or "Summon"
 ---@param option string
 ---@return boolean|nil
-function BANK:PresetSettingsCheckBoxEnabled(option)
+function BANK:PresetSettingsGetCheckBox(option)
     if type(option) ~= "string" then
         print("[BANK] Error: Expected a string for 'option', got " .. type(option))
         return nil
@@ -1412,6 +1415,116 @@ function BANK:PresetSettingsCheckBoxEnabled(option)
     else
         print("[BANK] Unknown checkbox state for: " .. option)
         return nil
+    end
+end]]
+
+---Set a specific checkbox to be enaled or disabled in the bank preset settings. Valid options are "Inventory", "Equipment", or "Summon"
+---@param option string
+---@param state boolean
+---@return boolean|nil
+function BANK:PresetSettingsSetCheckBox(option, state)
+    if type(option) ~= "string" then
+        print("[BANK] Error: Expected a string for 'option', got " .. type(option))
+        return nil
+    end
+
+    if type(state) ~= "boolean" then
+        print("[BANK] Error: Expected a boolean for 'state', got " .. type(state))
+        return nil
+    end
+
+    if option == "Inventory" then
+        if state then
+            if not BANK:PresetSettingsGetCheckBox("Inventory") then
+                print("[BANK] Enabling inventory checkbox.")
+                API.DoAction_Interface(0xffffffff,0xffffffff,1,517,296,-1,API.OFF_ACT_GeneralInterface_route)
+                return true
+            elseif BANK:PresetSettingsGetCheckBox("Inventory") then
+                print("[BANK] Inventory checkbox already enabled. No action needed.")
+                return true
+            else
+                print("BANK:PresetSettingsGetCheckBox() returned nil.")
+                return false
+            end
+        elseif not state then
+            if BANK:PresetSettingsGetCheckBox("Inventory") then
+                print("[BANK] Disabling inventory checkbox.")
+                API.DoAction_Interface(0xffffffff,0xffffffff,1,517,296,-1,API.OFF_ACT_GeneralInterface_route)
+                return true
+            elseif not BANK:PresetSettingsGetCheckBox("Inventory") then
+                print("[BANK] Inventory checkbox already disabled. No action needed.")
+                return true
+            else
+                print("[BANK] BANK:PresetSettingsGetCheckBox() returned nil.")
+                return false
+            end
+        else
+            print("[BANK] State invalid: " .. tostring(state))
+            return false
+        end
+    
+    elseif option == "Equipment" then
+        if state then
+            if not BANK:PresetSettingsGetCheckBox("Equipment") then
+                print("[BANK] Enabling equipment checkbox.")
+                API.DoAction_Interface(0xffffffff,0xffffffff,1,517,298,-1,API.OFF_ACT_GeneralInterface_route)
+                return true
+            elseif BANK:PresetSettingsGetCheckBox("Equipment") then
+                print("[BANK] Equipment checkbox already enabled. No action needed.")
+                return true
+            else
+                print("[BANK] BANK:PresetSettingsGetCheckBox() returned nil.")
+                return false
+            end
+        elseif not state then
+            if BANK:PresetSettingsGetCheckBox("Equipment") then
+                print("[BANK] Disabling equipment checkbox.")
+                API.DoAction_Interface(0xffffffff,0xffffffff,1,517,298,-1,API.OFF_ACT_GeneralInterface_route)
+                return true
+            elseif not BANK:PresetSettingsGetCheckBox("Equipment") then
+                print("[BANK] Equipment checkbox already disabled. No action needed.")
+                return true
+            else
+                print("[BANK] BANK:PresetSettingsGetCheckBox() returned nil.")
+                return false
+            end
+        else
+            print("[BANK] State invalid: " .. tostring(state))
+            return false
+        end
+    
+    elseif option == "Summon" then
+        if state then
+            if not BANK:PresetSettingsGetCheckBox("Summon") then
+                print("[BANK] Enabling summon checkbox.")
+                API.DoAction_Interface(0xffffffff,0xffffffff,1,517,300,-1,API.OFF_ACT_GeneralInterface_route)
+                return true
+            elseif BANK:PresetSettingsGetCheckBox("Summon") then
+                print("[BANK] Summon checkbox already enabled. No action needed.")
+                return true
+            else
+                print("BANK:PresetSettingsGetCheckBox() returned nil.")
+                return false
+            end
+        elseif not state then
+            if BANK:PresetSettingsGetCheckBox("Summon") then
+                print("[BANK] Disabling summon checkbox.")
+                API.DoAction_Interface(0xffffffff,0xffffffff,1,517,300,-1,API.OFF_ACT_GeneralInterface_route)
+                return true
+            elseif not BANK:PresetSettingsGetCheckBox("Summon") then
+                print("[BANK] Summon checkbox already disabled. No action needed.")
+                return true
+            else
+                print("[BANK] BANK:PresetSettingsGetCheckBox() returned nil.")
+                return false
+            end
+        else
+            print("[BANK] State invalid: " .. tostring(state))
+            return false
+        end
+    else
+        print("[BANK] Unknown option: " .. tostring(option))
+        return false
     end
 end
 
