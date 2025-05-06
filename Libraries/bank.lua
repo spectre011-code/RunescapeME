@@ -1,6 +1,6 @@
 local ScriptName = "Bank Toolbox"
 local Author = "Spectre011"
-local ScriptVersion = "1.0.4"
+local ScriptVersion = "1.0.5"
 local ReleaseDate = "02-05-2025"
 local DiscordHandle = "not_spectre011"
 
@@ -18,26 +18,41 @@ v1.0.3 - 02-05-2025
 v1.0.4 - 04-05-2025
     - Edited credits variables to be local to prevent some funny interactions with my other scripts.
     - Added functions: 
-        BANK.GetTransferTab()
-        BANK.SetTransferTab()
-        BANK.PresetSettingsIsOpen()
-        BANK.PresetSettingsOpen()
-        BANK.PresetSettingsReturnToBank()
-        BANK.PresetSettingsGetSelectedPreset()
-        BANK.PresetSettingsSelectPreset()
-        BANK.PresetSettingsGetInventory()
-        BANK.PresetSettingsGetEquipment()
-        BANK.PrintInventory()
+        BANK:GetTransferTab()
+        BANK:SetTransferTab()
+        BANK:PresetSettingsIsOpen()
+        BANK:PresetSettingsOpen()
+        BANK:PresetSettingsReturnToBank()
+        BANK:PresetSettingsGetSelectedPreset()
+        BANK:PresetSettingsSelectPreset()
+        BANK:PresetSettingsGetInventory()
+        BANK:PresetSettingsGetEquipment()
+        BANK:PrintInventory()
     - Edited relevant functions to check for transfer/preset tabs.
     - Edited some prints to be more descriptive.
+v1.0.5 - 06-05-2025
+    Functions now use : instead of .
+    Modified tables to be inside the BANK table.
+    Modified functions to use the tables with the atribute self.
+    Modified functions BANK:PresetSettingsGetEquipment() and BANK:PresetSettingsGetInventory() to include the item name.
+    Added function BANK:PresetSettingsCheckBoxEnabled().
+    Renamed some function to be more descriptive of their class.
+    Reordered function by class:
+        General bank
+        Deposit box
+        Colelction box
+        Preset settings
 ]]
 
 local API = require("api")
 
 local BANK = {}
 
+BANK.Interfaces = {}
+BANK.Interfaces.PresetSettings = {}
+
 --This gets the ids of the items
-local CollectionBoxSlots = { -- https://imgur.com/WN60RRo 
+BANK.Interfaces.CollectionBoxSlots = { -- https://imgur.com/WN60RRo 
     { { 109,37,-1,0 }, { 109,39,-1,0 }, { 109,15,-1,0 }, { 109,14,-1,0 }, { 109,14,1,0 } }, -- Slot 1
     { { 109,37,-1,0 }, { 109,39,-1,0 }, { 109,15,-1,0 }, { 109,14,-1,0 }, { 109,14,3,0 } }, -- Slot 2
 
@@ -65,7 +80,7 @@ local CollectionBoxSlots = { -- https://imgur.com/WN60RRo
 
 --This gets the name of the items
 --[[
-local CollectionBoxSlots = { -- https://imgur.com/WN60RRo
+BANK.Interface.CollectionBoxSlots = { -- https://imgur.com/WN60RRo
     { { 109,37,-1,0 }, { 109,39,-1,0 }, { 109,15,-1,0 }, { 109,14,-1,0 }, { 109,14,0,0 } }, -- Slot 1
     { { 109,37,-1,0 }, { 109,39,-1,0 }, { 109,15,-1,0 }, { 109,14,-1,0 }, { 109,14,2,0 } }, -- Slot 2
 
@@ -91,7 +106,7 @@ local CollectionBoxSlots = { -- https://imgur.com/WN60RRo
     { { 109,37,-1,0 }, { 109,39,-1,0 }, { 109,27,-1,0 }, { 109,67,-1,0 }, { 109,67,2,0 } } -- Slot 16
 }]]
 
-local PresetSettingsInventory = { 
+BANK.Interfaces.PresetSettings.Inventory = { 
     { { 517,0,-1,0 }, { 517,2,-1,0 }, { 517,153,-1,0 }, { 517,261,-1,0 }, { 517,262,-1,0 }, { 517,277,-1,0 }, { 517,280,-1,0 }, { 517,280,0,0 } },
     { { 517,0,-1,0 }, { 517,2,-1,0 }, { 517,153,-1,0 }, { 517,261,-1,0 }, { 517,262,-1,0 }, { 517,277,-1,0 }, { 517,280,-1,0 }, { 517,280,1,0 } },
     { { 517,0,-1,0 }, { 517,2,-1,0 }, { 517,153,-1,0 }, { 517,261,-1,0 }, { 517,262,-1,0 }, { 517,277,-1,0 }, { 517,280,-1,0 }, { 517,280,2,0 } },
@@ -122,7 +137,7 @@ local PresetSettingsInventory = {
     { { 517,0,-1,0 }, { 517,2,-1,0 }, { 517,153,-1,0 }, { 517,261,-1,0 }, { 517,262,-1,0 }, { 517,277,-1,0 }, { 517,280,-1,0 }, { 517,280,27,0 } }
 }
 
-local PresetSettingsEquipment = {
+BANK.Interfaces.PresetSettings.Equipment = {
     { { 517,0,-1,0 }, { 517,2,-1,0 }, { 517,153,-1,0 }, { 517,261,-1,0 }, { 517,262,-1,0 }, { 517,281,-1,0 }, { 517,283,-1,0 }, { 517,284,-1,0 }, { 517,286,-1,0 }, { 517,290,-1,0 }, { 517,290,0,0 } },
     { { 517,0,-1,0 }, { 517,2,-1,0 }, { 517,153,-1,0 }, { 517,261,-1,0 }, { 517,262,-1,0 }, { 517,281,-1,0 }, { 517,283,-1,0 }, { 517,284,-1,0 }, { 517,286,-1,0 }, { 517,290,-1,0 }, { 517,290,1,0 } },
     { { 517,0,-1,0 }, { 517,2,-1,0 }, { 517,153,-1,0 }, { 517,261,-1,0 }, { 517,262,-1,0 }, { 517,281,-1,0 }, { 517,283,-1,0 }, { 517,284,-1,0 }, { 517,286,-1,0 }, { 517,290,-1,0 }, { 517,290,2,0 } },
@@ -138,10 +153,40 @@ local PresetSettingsEquipment = {
     { { 517,0,-1,0 }, { 517,2,-1,0 }, { 517,153,-1,0 }, { 517,261,-1,0 }, { 517,262,-1,0 }, { 517,281,-1,0 }, { 517,283,-1,0 }, { 517,284,-1,0 }, { 517,286,-1,0 }, { 517,290,-1,0 }, { 517,290,17,0 } }
 }
 
+BANK.Interfaces.PresetSettings.InventoryCheckBox = { 
+    { 517,0,-1,0 }, { 517,2,-1,0 }, { 517,153,-1,0 }, { 517,261,-1,0 }, { 517,262,-1,0 }, { 517,292,-1,0 }, { 517,294,-1,0 }, { 517,296,-1,0 } 
+}
+
+BANK.Interfaces.PresetSettings.EquipmentCheckBox = { 
+    { 517,0,-1,0 }, { 517,2,-1,0 }, { 517,153,-1,0 }, { 517,261,-1,0 }, { 517,262,-1,0 }, { 517,292,-1,0 }, { 517,294,-1,0 }, { 517,298,-1,0 } 
+}
+
+BANK.Interfaces.PresetSettings.SummonCheckBox = { 
+    { 517,0,-1,0 }, { 517,2,-1,0 }, { 517,153,-1,0 }, { 517,261,-1,0 }, { 517,262,-1,0 }, { 517,292,-1,0 }, { 517,294,-1,0 }, { 517,300,-1,0 } 
+}
+
+-- ##################################
+-- #                                #
+-- #     GENERAL BANK FUNCTIONS     #
+-- #                                #
+-- ##################################
+
+-- Check if Bank interface is open.
+---@return boolean
+function BANK:IsOpen()
+    if API.VB_FindPSettinOrder(2874, 0).state == 24 then
+        print("[BANK] Bank interface open.")
+        return true
+    else
+        print("[BANK] Bank interface is not open.")
+        return false
+    end
+end
+
 -- Attempts to open your bank using the listed options. Requires cache enabled https://imgur.com/5I9a46V
 ---@return boolean
-function BANK.Open()
-    print("[BANK] Opening bank.")
+function BANK:Open()
+    print("[BANK] Opening BANK:")
     if Interact:NPC("Banker", "Bank", 50) then
         print("[BANK] Banker succeded.")
         return true
@@ -162,93 +207,18 @@ function BANK.Open()
         return true
     end
 
-    print("[BANK] Could not interact with any of the following: Banker, Bank chest, Bank booth and Counter.")
-    return false
-end
-
--- Attempts to open your collection box using the listed options. Requires cache enabled https://imgur.com/5I9a46V
----@return boolean
-function BANK.OpenCollectionBox()
-    print("[BANK] Opening colection box.")
-    if Interact:NPC("Banker", "Collect", 50) then
-        print("[BANK] Banker succeded.")
-        return true
-    end
-
-    if Interact:Object("Bank chest", "Collect", 50) then
-        print("[BANK] Bank chest succeded.")
-        return true
-    end
-
-    if Interact:Object("Bank booth", "Collect", 50) then
-        print("[BANK] Bank booth succeded.")
-        return true
-    end
-
-    if Interact:Object("Counter", "Collect", 50) then
+    if Interact:Object("Head Guard", "Bank", 50) then
         print("[BANK] Counter succeded.")
         return true
     end
 
-    print("[BANK] Could not interact with any of the following: Banker, Bank chest, Bank booth and Counter.")
-    return false
-end
-
--- Attempts to open a deposit box. Requires cache enabled https://imgur.com/5I9a46V
----@return boolean
-function BANK.OpenDepositBox()
-    print("[BANK] Opening Deposit box.")
-    if Interact:Object("Deposit box", "Deposit", 50) then
-        return true
-    end
-
-    print("[BANK] Could not interact with any Deposit box.")
-    return false
-end
-
--- Empty your backpack into a deposit box
----@return boolean
-function BANK.DepositInventoryDepositBox()
-    print("[BANK] Depositing inventory in deposit box.")
-    return API.DoAction_Interface(0x24,0xffffffff,1,11,5,-1,API.OFF_ACT_GeneralInterface_route)
-end
-
--- Empty the items you are wearing into a deposit box
----@return boolean
-function BANK.DepositEquipmentDepositBox()
-    print("[BANK] Depositing equipment in deposit box.")
-    return API.DoAction_Interface(0x24,0xffffffff,1,11,11,-1,API.OFF_ACT_GeneralInterface_route)
-end
-
--- Empty your beast of burden's inventory into a deposit box
----@return boolean
-function BANK.DepositSummonDepositBox()
-    print("[BANK] Depositing beast of burden's inventory into a deposit box.")
-    return API.DoAction_Interface(0x24,0xffffffff,1,11,11,-1,API.OFF_ACT_GeneralInterface_route)
-end
-
--- Empty your money pouch into a deposit box
----@return boolean
-function BANK.DepositMoneyPouchDepositBox()
-    print("[BANK] Depositing all your money into a deposit box.")
-    return API.DoAction_Interface(0x24,0xffffffff,1,11,14,-1,API.OFF_ACT_GeneralInterface_route)
-end
-
--- Attempts to deposit-all in a deposit box. Requires cache enabled https://imgur.com/5I9a46V
----@return boolean
-function BANK.DepositAllDepositBox()
-    print("[BANK] Depositing-All in a deposit box.")
-    if Interact:Object("Deposit box", "Deposit-All", 50) then
-        return true
-    end
-
-    print("[BANK] Could not interact with any Deposit box.")
+    print("[BANK] Could not interact with any of the following: Banker, Bank chest, Bank booth, Counter and Head Guard.")
     return false
 end
 
 -- Attempts to load the last bank preset using the listed options. Requires cache enabled https://imgur.com/5I9a46V
 ---@return boolean
-function BANK.LoadLastPreset()
+function BANK:LoadLastPreset()
     print("[BANK] Loading last preset.")
     if Interact:NPC("Banker", "Load Last Preset from", 50) then
         print("[BANK] Banker succeded.")
@@ -274,115 +244,10 @@ function BANK.LoadLastPreset()
     return false
 end
 
--- Check if Bank interface is open.
----@return boolean
-function BANK.IsOpen()
-    if API.VB_FindPSettinOrder(2874, 0).state == 24 then
-        print("[BANK] Bank interface open.")
-        return true
-    else
-        print("[BANK] Bank interface is not open.")
-        return false
-    end
-end
-
--- Check if Deposit box interface is open.
----@return boolean
-function BANK.IsDepositBoxOpen()
-    if API.VB_FindPSettinOrder(2874, 0).state == 69 then
-        print("[BANK] Deposit box interface open.")
-        return true
-    else
-        print("[BANK] Deposit box interface is not open.")
-        return false
-    end
-end
-
--- Check if Collect interface is open.
----@return boolean
-function BANK.IsCollectInterfaceOpen()
-    if API.VB_FindPSettinOrder(2874, 0).state == 18 then
-        print("[BANK] Collect interface open.")
-        return true
-    else
-        print("[BANK] Collect interface is not open.")
-        return false
-    end 
-end
-
--- Check if there are items to collect.
----@return boolean
-function BANK.HasItemsToCollect()
-    local FoundItem = false
-
-    for i = 1, 16 do
-        local slot = API.ScanForInterfaceTest2Get(false, CollectionBoxSlots[i])[1]
-        if slot.itemid1 and slot.itemid1 ~= -1 then
-            FoundItem = true
-        end
-    end
-
-    if FoundItem then
-        print("[BANK] There is at least one item to collect.")
-    else
-        print("[BANK] There are no items to collect.")
-    end
-
-    return FoundItem
-end
-
--- Check if there is a specific item to collect.
----@param itemID number
----@return boolean
-function BANK.CollectContains(itemID)
-    local FoundItem = false
-
-    for i = 1, 16 do
-        local slot = API.ScanForInterfaceTest2Get(false, CollectionBoxSlots[i])[1]
-        if slot.itemid1 and slot.itemid1 == itemID then
-            FoundItem = true
-        end
-    end
-
-    if FoundItem then
-        print("[BANK] Item ID: "..itemID.." found.")
-    else
-        print("[BANK] Item ID: "..itemID.." not found.")
-    end
-
-    return FoundItem
-end
-
--- Collects all to inventory from Collect interface
----@return boolean
-function BANK.CollectAllToInventory()
-    if BANK.HasItemsToCollect() then
-        print("[BANK] Collecting all to inventory.")
-        API.DoAction_Interface(0x24,0xffffffff,1,109,55,-1,API.OFF_ACT_GeneralInterface_route) 
-        return true
-    else
-        print("[BANK] There are no items to collect.")
-        return false        
-    end    
-end
-
--- Collects all to bank from Collect interface
----@return boolean
-function BANK.CollectAllToBank()
-    if BANK.HasItemsToCollect() then
-        print("[BANK] Collecting all to bank.")
-        API.DoAction_Interface(0x24,0xffffffff,1,109,47,-1,API.OFF_ACT_GeneralInterface_route)
-        return true
-    else
-        print("[BANK] There are no items to collect.")
-        return false        
-    end
-end
-
--- Checks if inventory has item
+-- Checks if inventory has item.
 ---@param ItemID number
 ---@return boolean
-function BANK.InventoryContains(ItemID)
+function BANK:InventoryContains(ItemID)
     if type(ItemID) ~= "number" then
         print("[BANK] Error: Expected a number, got "..tostring(ItemID).." ("..type(ItemID)..")")
         return false
@@ -410,10 +275,10 @@ function BANK.InventoryContains(ItemID)
     return FoundItem
 end
 
--- Checks if item is equipped
+-- Checks if item is equipped.
 ---@param ItemID number
 ---@return boolean
-function BANK.IsEquipped(ItemID)
+function BANK:IsEquipped(ItemID)
     if type(ItemID) ~= "number" then
         print("[BANK] Error: Expected a number, got "..tostring(ItemID).." ("..type(ItemID)..")")
         return false
@@ -441,10 +306,10 @@ function BANK.IsEquipped(ItemID)
     return FoundItem
 end
 
--- Checks if bank has item
+-- Checks if bank has item.
 ---@param ItemID number
 ---@return boolean
-function BANK.Contains(ItemID)
+function BANK:Contains(ItemID)
     if type(ItemID) ~= "number" then
         print("[BANK] Error: Expected a number, got "..tostring(ItemID).." ("..type(ItemID)..")")
         return false
@@ -464,17 +329,17 @@ function BANK.Contains(ItemID)
     end
 
     if FoundItem then
-        print("[BANK] Item ID: "..ItemID.." found in bank.")
+        print("[BANK] Item ID: "..ItemID.." found in BANK:")
     else
-        print("[BANK] Item ID: "..ItemID.." not found in bank.")
+        print("[BANK] Item ID: "..ItemID.." not found in BANK:")
     end
 
     return FoundItem
 end
 
--- Get the player tab opened in the bank(Inventory, Equipment or Beast of burden)
+-- Get the player tab opened in the bank(Inventory, Equipment or Beast of burden).
 ---@return number|boolean
-function BANK.GetOpenedTab()
+function BANK:GetOpenedTab()
     local VB = API.VB_FindPSettinOrder(6680).state
     if VB == 5120 then
         print("[BANK] Inventory tab is opened.")
@@ -487,7 +352,7 @@ function BANK.GetOpenedTab()
         return 3
     else
         print("[BANK] Something went horribly wrong here. Send me a screenshot of the console on Discord: not_spectre011.")
-        print("Function: BANK.GetOpenedTab()")
+        print("Function: BANK:GetOpenedTab()")
         local var = API.VB_FindPSettinOrder(6680)
         print("--------------------------")
         print("state: " .. var.state)
@@ -499,10 +364,10 @@ function BANK.GetOpenedTab()
     end
 end
 
---Open the specified player tab inside the bank(1 = Inventory, 2 = Beast of burden and 3 = Equipment)
+--Open the specified player tab inside the bank(1 = Inventory, 2 = Beast of burden and 3 = Equipment).
 ---@param tabID number
 ---@return boolean
-function BANK.OpenTab(tabID)
+function BANK:OpenTab(tabID)
     print("[BANK] Opening tab: "..tostring(tabID)..".")
     if type(tabID) ~= "number" then
         print("[BANK] Error: Expected a number, got "..tostring(tabID).." ("..type(tabID)..")")
@@ -515,7 +380,7 @@ function BANK.OpenTab(tabID)
     end
 
     if tabID == 1 then
-        if BANK.GetOpenedTab() == 1 then
+        if BANK:GetOpenedTab() == 1 then
             print("[BANK] Inventory tab already open. No action needed.")
             return true
         else
@@ -524,7 +389,7 @@ function BANK.OpenTab(tabID)
             return true
         end
     elseif tabID == 2 then
-        if BANK.GetOpenedTab() == 2 then
+        if BANK:GetOpenedTab() == 2 then
             print("[BANK] Beast of burden tab already open. No action needed.")
             return true
         else
@@ -533,7 +398,7 @@ function BANK.OpenTab(tabID)
             return true
         end
     elseif tabID == 3 then
-        if BANK.GetOpenedTab() == 3 then
+        if BANK:GetOpenedTab() == 3 then
             print("[BANK] Equipment tab open. No action needed.")
             return true
         else
@@ -543,18 +408,18 @@ function BANK.OpenTab(tabID)
         end
     else
         print("[BANK] Something went horribly wrong here. Send me a screenshot of the console on Discord: not_spectre011.")
-        print("Function: BANK.OpenTab()")
+        print("Function: BANK:OpenTab()")
         print("--------------------------")
         print("Value passed: "..tostring(tabID))
-        print("Return GetOpenedTab(): "..tostring(BANK.GetOpenedTab()))
+        print("Return GetOpenedTab(): "..tostring(BANK:GetOpenedTab()))
         print("--------------------------")
         return false
     end
 end
 
--- Get transfer or preset tab. 0 = transfer and 1 = preset
+-- Get transfer or preset tab. 0 = transfer and 1 = preset.
 ---@return number|false
-function BANK.GetTransferTab()
+function BANK:GetTransferTab()
     local VB = API.VB_FindPSettinOrder(6680).state >> 12
     if VB == 0 then
         print("[BANK] Bank is showing transfer.")
@@ -564,7 +429,7 @@ function BANK.GetTransferTab()
         return 1
     else
         print("[BANK] Something went horribly wrong here. Send me a screenshot of the console on Discord: not_spectre011.")
-        print("Function: BANK.GetTransferTab()")
+        print("Function: BANK:GetTransferTab()")
         print("--------------------------")
         print("VB Value: "..tostring(VB))
         print("--------------------------")
@@ -572,12 +437,12 @@ function BANK.GetTransferTab()
     end
 end
 
--- Set transfer or preset tab. 0 = transfer and 1 = preset
+-- Set transfer or preset tab. 0 = transfer and 1 = preset.
 ---@param number number
 ---@return boolean
-function BANK.SetTransferTab(number)
+function BANK:SetTransferTab(number)
     if tonumber(number) == 0 then
-        if BANK.GetTransferTab() ~= 0 then
+        if BANK:GetTransferTab() ~= 0 then
             print("[BANK] Opening transfer tab.")
             API.DoAction_Interface(0x2e,0xffffffff,1,517,151,-1,API.OFF_ACT_GeneralInterface_route)
             return true
@@ -585,7 +450,7 @@ function BANK.SetTransferTab(number)
             return true
         end
     elseif tonumber(number) == 1 then
-        if BANK.GetTransferTab() ~= 1 then
+        if BANK:GetTransferTab() ~= 1 then
             print("[BANK] Opening preset tab.")
             API.DoAction_Interface(0x2e,0xffffffff,1,517,152,-1,API.OFF_ACT_GeneralInterface_route)
             return true
@@ -594,7 +459,7 @@ function BANK.SetTransferTab(number)
         end
     else
         print("[BANK] Something went horribly wrong here. Send me a screenshot of the console on Discord: not_spectre011.")
-        print("Function: BANK.SetTransferTab()")
+        print("Function: BANK:SetTransferTab()")
         print("--------------------------")
         print("VB Value: "..tostring(number))
         print("--------------------------")
@@ -604,7 +469,7 @@ end
 
 -- Retrieves the currently selected quantity option from the interface.
 ---@return number|string|boolean
-function BANK.GetQuantitySelected()
+function BANK:GetQuantitySelected()
     local VB = API.VB_FindPSettinOrder(8958).state
 
     if VB == 50 then
@@ -628,7 +493,7 @@ function BANK.GetQuantitySelected()
         return false
     else
         print("[BANK] Something went horribly wrong here. Send me a screenshot of the console on Discord: not_spectre011.")
-        print("Function: BANK.GetQuantitySelected()")
+        print("Function: BANK:GetQuantitySelected()")
         local var = API.VB_FindPSettinOrder(8958)
         print("--------------------------")
         print("state: " .. var.state)
@@ -645,7 +510,7 @@ end
 -- Set the quantity to transfer. Valid inputs are: 1, 5, 10, "All", or "X".
 ---@param Qtitty number|string
 ---@return boolean
-function BANK.SetQuantity(Qtitty)
+function BANK:SetQuantity(Qtitty)
     if type(Qtitty) ~= "number" and type(Qtitty) ~= "string" then
         print("[BANK] Error: Invalid input type. Expected number or string, got: "..type(Qtitty))
         return false
@@ -666,10 +531,10 @@ function BANK.SetQuantity(Qtitty)
         end
     end
 
-    BANK.SetTransferTab(0)
+    BANK:SetTransferTab(0)
 
     if Qtitty == 1 then
-        if BANK.GetQuantitySelected() ~= 1 then
+        if BANK:GetQuantitySelected() ~= 1 then
             print("[BANK] Transfer quantity set to 1.")
             API.DoAction_Interface(0x2e,0xffffffff,1,517,93,-1,API.OFF_ACT_GeneralInterface_route)
             return true
@@ -678,7 +543,7 @@ function BANK.SetQuantity(Qtitty)
             return true
         end
     elseif Qtitty == 5 then
-        if BANK.GetQuantitySelected() ~= 5 then
+        if BANK:GetQuantitySelected() ~= 5 then
             print("[BANK] Transfer quantity set to 5.")
             API.DoAction_Interface(0x2e,0xffffffff,1,517,96,-1,API.OFF_ACT_GeneralInterface_route)
             return true
@@ -687,7 +552,7 @@ function BANK.SetQuantity(Qtitty)
             return true
         end
     elseif Qtitty == 10 then        
-        if BANK.GetQuantitySelected() ~= 10 then
+        if BANK:GetQuantitySelected() ~= 10 then
             print("[BANK] Transfer quantity set to 10.")
             API.DoAction_Interface(0x2e,0xffffffff,1,517,99,-1,API.OFF_ACT_GeneralInterface_route)
             return true
@@ -696,7 +561,7 @@ function BANK.SetQuantity(Qtitty)
             return true
         end
     elseif Qtitty == "All" then
-        if BANK.GetQuantitySelected() ~= "All" then
+        if BANK:GetQuantitySelected() ~= "All" then
             print("[BANK] Transfer quantity set to All.")
             API.DoAction_Interface(0x2e,0xffffffff,1,517,103,-1,API.OFF_ACT_GeneralInterface_route)
             return true
@@ -705,7 +570,7 @@ function BANK.SetQuantity(Qtitty)
             return true
         end
     elseif Qtitty == "X" then
-        if BANK.GetQuantitySelected() ~= "X" then
+        if BANK:GetQuantitySelected() ~= "X" then
             print("[BANK] Transfer quantity set to X.")
             API.DoAction_Interface(0x2e,0xffffffff,1,517,106,-1,API.OFF_ACT_GeneralInterface_route)
             return true
@@ -715,12 +580,12 @@ function BANK.SetQuantity(Qtitty)
         end
     else
         print("[BANK] Something went horribly wrong here. Send me a screenshot of the console on Discord: not_spectre011.")
-        print("Function: BANK.SetQuantity()")
+        print("Function: BANK:SetQuantity()")
         print("--------------------------")
         print("Value passed: "..tostring(Qtitty))
         print("Type passed: "..type(Qtitty))
-        print("Return GetQuantitySelected(): "..tostring(BANK.GetQuantitySelected()))
-        print("Return GetXQuantity(): "..tostring(BANK.GetXQuantity()))
+        print("Return GetQuantitySelected(): "..tostring(BANK:GetQuantitySelected()))
+        print("Return GetXQuantity(): "..tostring(BANK:GetXQuantity()))
         print("--------------------------")
         return false
     end    
@@ -728,7 +593,7 @@ end
 
 -- Retrieves the currently X quantity value from the interface.
 ---@return number
-function BANK.GetXQuantity()
+function BANK:GetXQuantity()
     local XValue = API.VB_FindPSettinOrder(111).state
     print("[BANK] X value: "..tostring(XValue))
     return XValue
@@ -737,7 +602,7 @@ end
 -- Set the X quantity to transfer. 
 ---@param Qtitty number
 ---@return boolean
-function BANK.SetXQuantity(Qtitty)
+function BANK:SetXQuantity(Qtitty)
     print("[BANK] Setting X quantitty to: "..tostring(Qtitty))
     if type(Qtitty) ~= "number" then
         print("[BANK] Error: Expect number, received: "..tostring(type(Qtitty)))
@@ -749,12 +614,12 @@ function BANK.SetXQuantity(Qtitty)
         return false
     end
 
-    if BANK.GetXQuantity() == Qtitty then
+    if BANK:GetXQuantity() == Qtitty then
         print("[BANK] X quantity already set to "..tostring(Qtitty)..".")
         return true
     end
     
-    BANK.SetTransferTab(0)
+    BANK:SetTransferTab(0)
 
     API.DoAction_Interface(0xffffffff,0xffffffff,1,517,114,-1,API.OFF_ACT_GeneralInterface_route)
     API.RandomSleep2(1000, 1000, 1000)
@@ -772,9 +637,9 @@ function BANK.SetXQuantity(Qtitty)
     return true
 end
 
--- Checks if bank is set to note mode
+-- Checks if bank is set to note mode.
 ---@return boolean
-function BANK.IsNoteModeEnabled()
+function BANK:IsNoteModeEnabled()
     local VB = API.VB_FindPSettinOrder(160).state
 
     if VB == 0 then
@@ -797,17 +662,17 @@ function BANK.IsNoteModeEnabled()
     end
 end
 
--- Set withdraw mode. True = note and false = item
+-- Set withdraw mode. True = note and false = item.
 ---@param boolean boolean
 ---@return boolean
-function BANK.SetNoteMode(boolean)
+function BANK:SetNoteMode(boolean)
     if type(boolean) ~= "boolean" then
         print("[BANK] Error: Expected a boolean, got "..tostring(boolean).." ("..type(boolean)..")")
         return false
     end
 
     if boolean == true then
-        if BANK.IsNoteModeEnabled() then
+        if BANK:IsNoteModeEnabled() then
             print("[BANK] Note mode already enabled. No action needed.")
             return true
         else
@@ -816,7 +681,7 @@ function BANK.SetNoteMode(boolean)
             return true
         end
     elseif boolean == false then
-        if not BANK.IsNoteModeEnabled() then
+        if not BANK:IsNoteModeEnabled() then
             print("[BANK] Note mode already disabled. No action needed.")
             return true
         else
@@ -826,18 +691,18 @@ function BANK.SetNoteMode(boolean)
         end
     else
         print("[BANK] Something went horribly wrong here. Send me a screenshot of the console on Discord: not_spectre011.")
-        print("Function: BANK.SetNoteMode()")
+        print("Function: BANK:SetNoteMode()")
         print("--------------------------")
         print("Value passed: "..tostring(boolean))
-        print("Return IsNoteModeEnabled(): "..tostring(BANK.IsNoteModeEnabled()))
+        print("Return IsNoteModeEnabled(): "..tostring(BANK:IsNoteModeEnabled()))
         print("--------------------------")
         return false
     end
 end
 
--- Get preset page. Page 1 = (1 -> 9), page 2 = (10 -> 18)
+-- Get preset page. Page 1 = (1 -> 9), page 2 = (10 -> 18).
 ---@return number|false
-function BANK.GetPresetPage()
+function BANK:GetPresetPage()
     local VB = API.VB_FindPSettinOrder(9932).state >> 15
     if VB == 0 then
         print("[BANK] Bank is showing page 1, presets 1 to 9.")
@@ -847,7 +712,7 @@ function BANK.GetPresetPage()
         return 2
     else
         print("[BANK] Something went horribly wrong here. Send me a screenshot of the console on Discord: not_spectre011.")
-        print("Function: BANK.GetPresetPage()")
+        print("Function: BANK:GetPresetPage()")
         print("--------------------------")
         print("VB Value: "..tostring(VB))
         print("--------------------------")
@@ -858,16 +723,16 @@ end
 -- Sets the bank preset page to the specified number (1 or 2).
 ---@param number
 ---@return boolean
-function BANK.SetPresetPage(number)
+function BANK:SetPresetPage(number)
     if type(number) ~= "number" then
         print("[BANK] Error: Expected a number, got "..tostring(number).." ("..type(number)..")")
         return false
     end
 
-    BANK.SetTransferTab(1)
+    BANK:SetTransferTab(1)
 
     if number == 1 then
-        if BANK.GetPresetPage() == 1 then
+        if BANK:GetPresetPage() == 1 then
             print("[BANK] Preset page already 1. No action needed.")
             return true
         else
@@ -876,7 +741,7 @@ function BANK.SetPresetPage(number)
             return true
         end
     elseif number == 2 then
-        if BANK.GetPresetPage() == 2 then
+        if BANK:GetPresetPage() == 2 then
             print("[BANK] Preset page already 2. No action needed.")
             return true
         else
@@ -886,10 +751,10 @@ function BANK.SetPresetPage(number)
         end
     else
         print("[BANK] Something went horribly wrong here. Send me a screenshot of the console on Discord: not_spectre011.")
-        print("Function: BANK.SetPresetPage()")
+        print("Function: BANK:SetPresetPage()")
         print("--------------------------")
         print("Value passed: "..tostring(number))
-        print("Return GetPresetPage(): "..tostring(BANK.GetPresetPage()))
+        print("Return GetPresetPage(): "..tostring(BANK:GetPresetPage()))
         print("--------------------------")
         return false
     end
@@ -898,7 +763,7 @@ end
 -- Saves the current bank preset to the specified preset slot (1-18).
 ---@param number
 ---@return boolean
-function BANK.SavePreset(number)
+function BANK:SavePreset(number)
     if type(number) ~= "number" then
         print("[BANK] Error: Expected a number, got "..tostring(number).." ("..type(number)..")")
         return false
@@ -909,18 +774,18 @@ function BANK.SavePreset(number)
         return false
     end
 
-    BANK.SetTransferTab(1)
+    BANK:SetTransferTab(1)
 
     local slot = number
     if slot < 10 then
-        BANK.SetPresetPage(1)
+        BANK:SetPresetPage(1)
         API.RandomSleep2(200, 200, 200)
         print("[BANK] Saving preset number: "..tostring(number))
         API.DoAction_Interface(0xffffffff,0xffffffff,2,517,119,slot,API.OFF_ACT_GeneralInterface_route)
         return true
     else
         slot = slot - 9
-        BANK.SetPresetPage(2)
+        BANK:SetPresetPage(2)
         API.Sleep_tick(1)
         API.RandomSleep2(200, 200, 200)
         print("[BANK] Saving preset number: "..tostring(number))
@@ -931,18 +796,18 @@ function BANK.SavePreset(number)
     return false
 end
 
--- Saves the current beast of burden's preset
+-- Saves the current beast of burden's preset.
 ---@return boolean
-function BANK.SaveSummonPreset()
+function BANK:SaveSummonPreset()
     print("[BANK] Saving beast of burden preset")
-    BANK.SetTransferTab(1)
+    BANK:SetTransferTab(1)
     return API.DoAction_Interface(0xffffffff,0xffffffff,2,517,119,10,API.OFF_ACT_GeneralInterface_route)
 end
 
 -- Loads the specified preset (1-18).
 ---@param number
 ---@return boolean
-function BANK.LoadPreset(number)
+function BANK:LoadPreset(number)
     if type(number) ~= "number" then
         print("[BANK] Error: Expected a number, got "..tostring(number).." ("..type(number)..")")
         return false
@@ -955,14 +820,14 @@ function BANK.LoadPreset(number)
 
     local slot = number
     if slot < 10 then
-        BANK.SetPresetPage(1)
+        BANK:SetPresetPage(1)
         API.RandomSleep2(200, 200, 200)
         print("[BANK] Loading preset number: "..tostring(number))
         API.DoAction_Interface(0x24,0xffffffff,1,517,119,slot,API.OFF_ACT_GeneralInterface_route)
         return true
     else
         slot = slot - 9
-        BANK.SetPresetPage(2)
+        BANK:SetPresetPage(2)
         API.Sleep_tick(1)
         API.RandomSleep2(200, 200, 200)
         print("[BANK] Loading preset number: "..tostring(number))
@@ -973,47 +838,47 @@ function BANK.LoadPreset(number)
     return false
 end
 
--- Loads the beast of burden's preset
+-- Loads the beast of burden's preset.
 ---@return boolean
-function BANK.LoadSummonPreset()
+function BANK:LoadSummonPreset()
     print("[BANK] Loading beast of burden preset")
-    BANK.SetTransferTab(1)
+    BANK:SetTransferTab(1)
     return API.DoAction_Interface(0x24,0xffffffff,1,517,119,10,API.OFF_ACT_GeneralInterface_route)
 end
 
--- Empty your backpack into your bank
+-- Empty your backpack into your bank.
 ---@return boolean
-function BANK.DepositInventory()
+function BANK:DepositInventory()
     print("[BANK] Depositing inventory.")
     return API.DoAction_Interface(0xffffffff,0xffffffff,1,517,39,-1,API.OFF_ACT_GeneralInterface_route)
 end
 
--- Empty the items you are wearing into the bank
+-- Empty the items you are wearing into the bank.
 ---@return boolean
-function BANK.DepositEquipment()
+function BANK:DepositEquipment()
     print("[BANK] Depositing equipment.")
     return API.DoAction_Interface(0xffffffff,0xffffffff,1,517,42,-1,API.OFF_ACT_GeneralInterface_route)
 end
 
--- Empty your beast of burden's inventory into your bank
+-- Empty your beast of burden's inventory into your bank.
 ---@return boolean
-function BANK.DepositSummon()
+function BANK:DepositSummon()
     print("[BANK] Depositing beast of burden's inventory.")
     return API.DoAction_Interface(0xffffffff,0xffffffff,1,517,45,-1,API.OFF_ACT_GeneralInterface_route)
 end
 
--- Empty your money pouch into MY bank
+-- Empty your money pouch into MY bank.
 ---@return boolean
-function BANK.DepositMoneyPouch()
+function BANK:DepositMoneyPouch()
     print("[BANK] Depositing all your money.")
     return API.DoAction_Interface(0xffffffff,0xffffffff,1,517,48,-1,API.OFF_ACT_GeneralInterface_route)
 end
 
--- Withdraws item(s) from your bank. The amount is set with BANK.SetQuantity(Qtitty)
+-- Withdraws item(s) from your bank. The amount is set with BANK:SetQuantity(Qtitty).
 ---@param ItemID number|table
 ---@return boolean
-function BANK.Withdraw(ItemID)
-    BANK.OpenTab(1)
+function BANK:Withdraw(ItemID)
+    BANK:OpenTab(1)
     local Items = API.Container_Get_all(95)
     local success = true
     
@@ -1022,7 +887,7 @@ function BANK.Withdraw(ItemID)
         local ItemIDHex = string.format("0x%X", ItemID)
         local slot = nil
 
-        if not BANK.Contains(ItemID) then
+        if not BANK:Contains(ItemID) then
             return false
         end
 
@@ -1045,7 +910,7 @@ function BANK.Withdraw(ItemID)
     -- Handle table of items case
     elseif type(ItemID) == "table" then
         for _, id in ipairs(ItemID) do
-            local currentSuccess = BANK.Withdraw(id)
+            local currentSuccess = BANK:Withdraw(id)
             if not currentSuccess then
                 success = false
             end
@@ -1057,11 +922,11 @@ function BANK.Withdraw(ItemID)
     end
 end
 
--- Deposits item(s) into your bank. The amount is set with BANK.SetQuantity(Qtitty)
+-- Deposits item(s) into your bank. The amount is set with BANK:SetQuantity(Qtitty).
 ---@param ItemID number|table
 ---@return boolean
-function BANK.Deposit(ItemID)
-    BANK.OpenTab(1)
+function BANK:Deposit(ItemID)
+    BANK:OpenTab(1)
     local Items = API.Container_Get_all(93)
     local success = true
     
@@ -1070,7 +935,7 @@ function BANK.Deposit(ItemID)
         local ItemIDHex = string.format("0x%X", ItemID)
         local slot = nil
 
-        if not BANK.InventoryContains(ItemID) then
+        if not BANK:InventoryContains(ItemID) then
             return false
         end
 
@@ -1093,7 +958,7 @@ function BANK.Deposit(ItemID)
     -- Handle table of items case
     elseif type(ItemID) == "table" then
         for _, id in ipairs(ItemID) do
-            local currentSuccess = BANK.Deposit(id)
+            local currentSuccess = BANK:Deposit(id)
             if not currentSuccess then
                 success = false
             end
@@ -1108,14 +973,14 @@ end
 -- Equips an item from your bank.
 ---@param ItemID number
 ---@return boolean
-function BANK.Equip(ItemID)
+function BANK:Equip(ItemID)
     local Items = API.Container_Get_all(95)
-    BANK.OpenTab(3)
+    BANK:OpenTab(3)
 
     local ItemIDHex = string.format("0x%X", ItemID)
     local slot = nil
 
-    if not BANK.Contains(ItemID) then
+    if not BANK:Contains(ItemID) then
         return false
     end
 
@@ -1136,11 +1001,11 @@ function BANK.Equip(ItemID)
     end
 end
 
--- Withdraws item(s) from your bank to your beast of burden. The amount is set with BANK.SetQuantity(Qtitty)
+-- Withdraws item(s) from your bank to your beast of burden. The amount is set with BANK:SetQuantity(Qtitty)
 ---@param ItemID number|table
 ---@return boolean
-function BANK.WithdrawToBoB(ItemID)
-    BANK.OpenTab(2)
+function BANK:WithdrawToBoB(ItemID)
+    BANK:OpenTab(2)
     local Items = API.Container_Get_all(95)
     local success = true
     
@@ -1149,7 +1014,7 @@ function BANK.WithdrawToBoB(ItemID)
         local ItemIDHex = string.format("0x%X", ItemID)
         local slot = nil
 
-        if not BANK.Contains(ItemID) then
+        if not BANK:Contains(ItemID) then
             return false
         end
 
@@ -1172,7 +1037,7 @@ function BANK.WithdrawToBoB(ItemID)
     -- Handle table of items case
     elseif type(ItemID) == "table" then
         for _, id in ipairs(ItemID) do
-            local currentSuccess = BANK.Withdraw(id)
+            local currentSuccess = BANK:Withdraw(id)
             if not currentSuccess then
                 success = false
             end
@@ -1184,9 +1049,200 @@ function BANK.WithdrawToBoB(ItemID)
     end
 end
 
+-- #################################
+-- #                               #
+-- #     DEPOSIT BOX FUNCTIONS     #
+-- #                               #
+-- #################################
+
+-- Check if Deposit box interface is open.
+---@return boolean
+function BANK:DepositBoxIsOpen()
+    if API.VB_FindPSettinOrder(2874, 0).state == 69 then
+        print("[BANK] Deposit box interface open.")
+        return true
+    else
+        print("[BANK] Deposit box interface is not open.")
+        return false
+    end
+end
+
+-- Attempts to open a deposit box. Requires cache enabled https://imgur.com/5I9a46V
+---@return boolean
+function BANK:DepositBoxOpen()
+    print("[BANK] Opening Deposit box.")
+    if Interact:Object("Deposit box", "Deposit", 50) then
+        return true
+    end
+
+    print("[BANK] Could not interact with any Deposit box.")
+    return false
+end
+
+-- Empty your backpack into a deposit box.
+---@return boolean
+function BANK:DepositBoxDepositInventory()
+    print("[BANK] Depositing inventory in deposit box.")
+    return API.DoAction_Interface(0x24,0xffffffff,1,11,5,-1,API.OFF_ACT_GeneralInterface_route)
+end
+
+-- Empty the items you are wearing into a deposit box.
+---@return boolean
+function BANK:DepositBoxDepositEquipment()
+    print("[BANK] Depositing equipment in deposit box.")
+    return API.DoAction_Interface(0x24,0xffffffff,1,11,11,-1,API.OFF_ACT_GeneralInterface_route)
+end
+
+-- Empty your beast of burden's inventory into a deposit box.
+---@return boolean
+function BANK:DepositSummonDepositBox()
+    print("[BANK] Depositing beast of burden's inventory into a deposit box.")
+    return API.DoAction_Interface(0x24,0xffffffff,1,11,11,-1,API.OFF_ACT_GeneralInterface_route)
+end
+
+-- Empty your money pouch into a deposit box.
+---@return boolean
+function BANK:DepositBoxDepositMoneyPouch()
+    print("[BANK] Depositing all your money into a deposit box.")
+    return API.DoAction_Interface(0x24,0xffffffff,1,11,14,-1,API.OFF_ACT_GeneralInterface_route)
+end
+
+-- Attempts to deposit-all in a deposit box. Requires cache enabled https://imgur.com/5I9a46V
+---@return boolean
+function BANK:DepositBoxDepositAll()
+    print("[BANK] Depositing-All in a deposit box.")
+    if Interact:Object("Deposit box", "Deposit-All", 50) then
+        return true
+    end
+
+    print("[BANK] Could not interact with any Deposit box.")
+    return false
+end
+
+-- ####################################
+-- #                                  #
+-- #     COLLECTION BOX FUNCTIONS     #
+-- #                                  #
+-- ####################################
+
+-- Check if Collect interface is open.
+---@return boolean
+function BANK:ColletionBoxIsOpen()
+    if API.VB_FindPSettinOrder(2874, 0).state == 18 then
+        print("[BANK] Collect interface open.")
+        return true
+    else
+        print("[BANK] Collect interface is not open.")
+        return false
+    end 
+end
+
+-- Attempts to open your collection box using the listed options. Requires cache enabled https://imgur.com/5I9a46V
+---@return boolean
+function BANK:ColletionBoxOpen()
+    print("[BANK] Opening colection box.")
+    if Interact:NPC("Banker", "Collect", 50) then
+        print("[BANK] Banker succeded.")
+        return true
+    end
+
+    if Interact:Object("Bank chest", "Collect", 50) then
+        print("[BANK] Bank chest succeded.")
+        return true
+    end
+
+    if Interact:Object("Bank booth", "Collect", 50) then
+        print("[BANK] Bank booth succeded.")
+        return true
+    end
+
+    if Interact:Object("Counter", "Collect", 50) then
+        print("[BANK] Counter succeded.")
+        return true
+    end
+
+    print("[BANK] Could not interact with any of the following: Banker, Bank chest, Bank booth and Counter.")
+    return false
+end
+
+-- Check if there are items to collect.
+---@return boolean
+function BANK:ColletionBoxHasItems()
+    local FoundItem = false
+
+    for i = 1, 16 do
+        local slot = API.ScanForInterfaceTest2Get(false, self.Interfaces.CollectionBoxSlots[i])[1]
+        if slot.itemid1 and slot.itemid1 ~= -1 then
+            FoundItem = true
+        end
+    end
+
+    if FoundItem then
+        print("[BANK] There is at least one item to collect.")
+    else
+        print("[BANK] There are no items to collect.")
+    end
+
+    return FoundItem
+end
+
+-- Check if there is a specific item to collect.
+---@param itemID number
+---@return boolean
+function BANK:ColletionBoxContains(itemID)
+    local FoundItem = false
+
+    for i = 1, 16 do
+        local slot = API.ScanForInterfaceTest2Get(false, self.Interfaces.CollectionBoxSlots[i])[1]
+        if slot.itemid1 and slot.itemid1 == itemID then
+            FoundItem = true
+        end
+    end
+
+    if FoundItem then
+        print("[BANK] Item ID: "..itemID.." found.")
+    else
+        print("[BANK] Item ID: "..itemID.." not found.")
+    end
+
+    return FoundItem
+end
+
+-- Collects all to inventory from Collect interface.
+---@return boolean
+function BANK:ColletionBoxCollectToInventory()
+    if BANK:HasItemsToCollect() then
+        print("[BANK] Collecting all to inventory.")
+        API.DoAction_Interface(0x24,0xffffffff,1,109,55,-1,API.OFF_ACT_GeneralInterface_route) 
+        return true
+    else
+        print("[BANK] There are no items to collect.")
+        return false        
+    end    
+end
+
+-- Collects all to bank from Collect interface.
+---@return boolean
+function BANK:ColletionBoxCollectToBank()
+    if BANK:HasItemsToCollect() then
+        print("[BANK] Collecting all to BANK:")
+        API.DoAction_Interface(0x24,0xffffffff,1,109,47,-1,API.OFF_ACT_GeneralInterface_route)
+        return true
+    else
+        print("[BANK] There are no items to collect.")
+        return false        
+    end
+end
+
+-- #####################################
+-- #                                   #
+-- #     PRESET SETTINGS FUNCTIONS     #
+-- #                                   #
+-- #####################################
+
 -- Check if preset settings interface is open.
 ---@return boolean
-function BANK.PresetSettingsIsOpen()
+function BANK:PresetSettingsIsOpen()
     local VB = API.VB_FindPSettinOrder(6680).state >> 20
 
     if VB == 0 then
@@ -1198,7 +1254,7 @@ function BANK.PresetSettingsIsOpen()
         return true
     else
         print("[BANK] Something went horribly wrong here. Send me a screenshot of the console on Discord: not_spectre011.")
-        print("Function: BANK.PresetSettingsIsOpen()")
+        print("Function: BANK:PresetSettingsIsOpen()")
         local var = API.VB_FindPSettinOrder(6680)
         print("--------------------------")
         print("state: " .. var.state)
@@ -1212,8 +1268,8 @@ end
 
 -- Open preset settings interface.
 ---@return boolean
-function BANK.PresetSettingsOpen()
-    if not BANK.PresetSettingsIsOpen() then
+function BANK:PresetSettingsOpen()
+    if not BANK:PresetSettingsIsOpen() then
         print("[BANK] Opening preset settings.")
         API.DoAction_Interface(0x24,0xffffffff,1,517,119,0,API.OFF_ACT_GeneralInterface_route)
         return true
@@ -1226,9 +1282,9 @@ end
 
 -- Returns to bank.
 ---@return boolean
-function BANK.PresetSettingsReturnToBank()
-    if BANK.PresetSettingsIsOpen() then
-        print("[BANK] Return to bank.")
+function BANK:PresetSettingsReturnToBank()
+    if BANK:PresetSettingsIsOpen() then
+        print("[BANK] Return to BANK:")
         API.DoAction_Interface(0xffffffff,0xffffffff,1,517,86,-1,API.OFF_ACT_GeneralInterface_route)
         return true
     else
@@ -1240,9 +1296,9 @@ end
 
 -- Returns selected preset from the preset settings interface.
 ---@return number|false
-function BANK.PresetSettingsGetSelectedPreset()
-    if not BANK.PresetSettingsIsOpen() then
-        print("[BANK] Preset settings interface is not open. Open it first with BANK.PresetSettingsOpen()")
+function BANK:PresetSettingsGetSelectedPreset()
+    if not BANK:PresetSettingsIsOpen() then
+        print("[BANK] Preset settings interface is not open. Open it first with BANK:PresetSettingsOpen()")
         return false
     end
 
@@ -1251,10 +1307,10 @@ function BANK.PresetSettingsGetSelectedPreset()
     return tonumber(VB)
 end
 
--- Select a preset (1-19). 19 is beast of burden
+-- Select a preset (1-19). 19 is beast of burden.
 ---@param preset number
 ---@return boolean
-function BANK.PresetSettingsSelectPreset(preset)
+function BANK:PresetSettingsSelectPreset(preset)
     if type(preset) ~= "number" then
         print("[BANK] Invalid preset type. Expected a number, got " .. type(preset))
         return false
@@ -1266,25 +1322,25 @@ function BANK.PresetSettingsSelectPreset(preset)
         return false
     end
 
-    if BANK.PresetSettingsIsOpen() then
+    if BANK:PresetSettingsIsOpen() then
         print("[BANK] Selecting preset " .. slot .. ".")
         API.DoAction_Interface(0xffffffff, 0xffffffff, 1, 517, 268, slot, API.OFF_ACT_GeneralInterface_route)
         return true
     else
-        print("[BANK] Preset settings interface is not open. Open it first with BANK.PresetSettingsOpen().")
+        print("[BANK] Preset settings interface is not open. Open it first with BANK:PresetSettingsOpen().")
         return false
     end
 end
 
 ---Get the itemID of all inventory slots inside the preset settings interface.
 ---@return table|false
-function BANK.PresetSettingsGetInventory()
+function BANK:PresetSettingsGetInventory()
     local inventory = {}
 
     for i = 1, 28 do
-        local slot = API.ScanForInterfaceTest2Get(false, PresetSettingsInventory[i])[1]
+        local slot = API.ScanForInterfaceTest2Get(false, self.Interfaces.PresetSettings.Inventory[i])[1]
         if slot and slot.itemid1 then
-            table.insert(inventory, { index = i, itemid1 = slot.itemid1 })
+            table.insert(inventory, { index = i, itemid1 = slot.itemid1, textitem = slot.textitem })
         end
     end
 
@@ -1297,13 +1353,13 @@ end
 
 ---Get the itemID of all equipment slots inside the preset settings interface.
 ---@return table|false
-function BANK.PresetSettingsGetEquipment()
+function BANK:PresetSettingsGetEquipment()
     local equipment = {}
 
     for i = 1, 13 do
-        local slot = API.ScanForInterfaceTest2Get(false, PresetSettingsEquipment[i])[1]
+        local slot = API.ScanForInterfaceTest2Get(false, self.Interfaces.PresetSettings.Equipment[i])[1]
         if slot and slot.itemid1 then
-            table.insert(equipment, { index = i, itemid1 = slot.itemid1 })
+            table.insert(equipment, { index = i, itemid1 = slot.itemid1, textitem = slot.textitem })
         end
     end
 
@@ -1314,13 +1370,60 @@ function BANK.PresetSettingsGetEquipment()
     return equipment
 end
 
----Prints the data from BANK.PresetSettingsGetInventory() and BANK.PresetSettingsGetEquipment().
----@param inventory table
-function BANK.PrintInventory(inventory)
-    print("Contents:")
-    for _, item in ipairs(inventory) do
-        print(string.format("Slot %02d: Item ID = %d", item.index, item.itemid1))
+---Checks if a specific checkbox is enabled in the bank preset settings. Valid options are "Inventory", "Equipment", or "Summon"
+---@param option string
+---@return boolean|nil
+function BANK:PresetSettingsCheckBoxEnabled(option)
+    if type(option) ~= "string" then
+        print("[BANK] Error: Expected a string for 'option', got " .. type(option))
+        return nil
     end
+
+    local Interface
+    if option == "Inventory" then
+        Interface = BANK.Interfaces.PresetSettings.InventoryCheckBox
+    elseif option == "Equipment" then
+        Interface = BANK.Interfaces.PresetSettings.EquipmentCheckBox
+    elseif option == "Summon" then
+        Interface = BANK.Interfaces.PresetSettings.SummonCheckBox
+    else
+        print("[BANK] Invalid option: '" .. option .. "'. Accepted values are: Inventory, Equipment, or Summon.")
+        return nil
+    end
+
+    if not Interface then
+        print("[BANK] Error: Interface not found for option: " .. option)
+        return nil
+    end
+
+    local checkbox = API.ScanForInterfaceTest2Get(false, Interface)
+    if not checkbox or not checkbox[1] then
+        print("[BANK] Checkbox interface not found for: " .. option)
+        return nil
+    end
+
+    local state = checkbox[1].itemid2
+    if state == -1681558048 then
+        print("[BANK] ".. option .. " checkbox is Checked.")
+        return true
+    elseif state == -1681558120 then
+        print("[BANK] ".. option .. " checkbox is Unchecked.")
+        return false
+    else
+        print("[BANK] Unknown checkbox state for: " .. option)
+        return nil
+    end
+end
+
+---Prints the data from BANK:PresetSettingsGetInventory() and BANK:PresetSettingsGetEquipment().
+---@param data table
+---@return boolean
+function BANK:PresetSettingsPrintData(data)
+    print("Contents:")
+    for _, item in ipairs(data) do
+        print(string.format("Slot %02d: Item ID = %d Name: %s", item.index, item.itemid1, item.textitem))
+    end
+    return true
 end
 
 return BANK
