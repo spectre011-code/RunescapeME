@@ -41,7 +41,7 @@ v1.0.5 - 06-05-2025
     Reordered function by class:
         General bank
         Deposit box
-        Colelction box
+        Collection box
         Preset settings
 ]]
 
