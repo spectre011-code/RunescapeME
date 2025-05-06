@@ -1371,8 +1371,6 @@ function BANK:PresetSettingsGetEquipment()
     return equipment
 end
 
---[[BROKEN]]
---[[
 ---Checks if a specific checkbox is enabled in the bank preset settings. Valid options are "Inventory", "Equipment", or "Summon"
 ---@param option string
 ---@return boolean|nil
@@ -1382,41 +1380,48 @@ function BANK:PresetSettingsGetCheckBox(option)
         return nil
     end
 
-    local Interface
     if option == "Inventory" then
-        Interface = BANK.Interfaces.PresetSettings.InventoryCheckBox
+        local VB = (tonumber(API.VB_FindPSettinOrder(4338).state) >> 22) & 1
+        if VB == 0 then
+            print("[BANK] Inventory CheckBox Enabled.")
+            return true
+        elseif VB == 1 then
+            print("[BANK] Inventory CheckBox Disabled.")
+            return false
+        else
+            print("[BANK] Inventory CheckBox Unknown.")
+            return nil
+        end
     elseif option == "Equipment" then
-        Interface = BANK.Interfaces.PresetSettings.EquipmentCheckBox
+        local VB = (tonumber(API.VB_FindPSettinOrder(4338).state) >> 23) & 1
+        if VB == 0 then
+            print("[BANK] Equipment CheckBox Enabled.")
+            return true
+        elseif VB == 1 then
+            print("[BANK] Equipment CheckBox Disabled.")
+            return false
+        else
+            print("[BANK] Equipment CheckBox Unknown.")
+            return nil
+        end        
     elseif option == "Summon" then
-        Interface = BANK.Interfaces.PresetSettings.SummonCheckBox
+        local VB = (tonumber(API.VB_FindPSettinOrder(4915).state)) & 1
+        if VB == 0 then
+            print("[BANK] Summon CheckBox Disabled.")
+            return false
+        elseif VB == 1 then
+            print("[BANK] Summon CheckBox Enabled.")
+            return true
+        else
+            print("[BANK] Summon CheckBox Unknown.")
+            return nil
+        end
     else
         print("[BANK] Invalid option: '" .. option .. "'. Accepted values are: Inventory, Equipment, or Summon.")
         return nil
     end
-
-    if not Interface then
-        print("[BANK] Error: Interface not found for option: " .. option)
-        return nil
-    end
-
-    local checkbox = API.ScanForInterfaceTest2Get(false, Interface)
-    if not checkbox or not checkbox[1] then
-        print("[BANK] Checkbox interface not found for: " .. option)
-        return nil
-    end
-
-    local state = checkbox[1].itemid2
-    if state == -1681558048 then
-        print("[BANK] ".. option .. " checkbox is Checked.")
-        return true
-    elseif state == -1681558120 then
-        print("[BANK] ".. option .. " checkbox is Unchecked.")
-        return false
-    else
-        print("[BANK] Unknown checkbox state for: " .. option)
-        return nil
-    end
-end]]
+    
+end
 
 ---Set a specific checkbox to be enaled or disabled in the bank preset settings. Valid options are "Inventory", "Equipment", or "Summon"
 ---@param option string
@@ -1434,12 +1439,13 @@ function BANK:PresetSettingsSetCheckBox(option, state)
     end
 
     if option == "Inventory" then
+        local CheckBox = BANK:PresetSettingsGetCheckBox("Inventory")
         if state then
-            if not BANK:PresetSettingsGetCheckBox("Inventory") then
+            if not CheckBox then
                 print("[BANK] Enabling inventory checkbox.")
                 API.DoAction_Interface(0xffffffff,0xffffffff,1,517,296,-1,API.OFF_ACT_GeneralInterface_route)
                 return true
-            elseif BANK:PresetSettingsGetCheckBox("Inventory") then
+            elseif CheckBox then
                 print("[BANK] Inventory checkbox already enabled. No action needed.")
                 return true
             else
@@ -1447,11 +1453,11 @@ function BANK:PresetSettingsSetCheckBox(option, state)
                 return false
             end
         elseif not state then
-            if BANK:PresetSettingsGetCheckBox("Inventory") then
+            if CheckBox then
                 print("[BANK] Disabling inventory checkbox.")
                 API.DoAction_Interface(0xffffffff,0xffffffff,1,517,296,-1,API.OFF_ACT_GeneralInterface_route)
                 return true
-            elseif not BANK:PresetSettingsGetCheckBox("Inventory") then
+            elseif not CheckBox then
                 print("[BANK] Inventory checkbox already disabled. No action needed.")
                 return true
             else
@@ -1464,12 +1470,13 @@ function BANK:PresetSettingsSetCheckBox(option, state)
         end
     
     elseif option == "Equipment" then
+        local CheckBox = BANK:PresetSettingsGetCheckBox("Equipment")
         if state then
-            if not BANK:PresetSettingsGetCheckBox("Equipment") then
+            if not CheckBox then
                 print("[BANK] Enabling equipment checkbox.")
                 API.DoAction_Interface(0xffffffff,0xffffffff,1,517,298,-1,API.OFF_ACT_GeneralInterface_route)
                 return true
-            elseif BANK:PresetSettingsGetCheckBox("Equipment") then
+            elseif CheckBox then
                 print("[BANK] Equipment checkbox already enabled. No action needed.")
                 return true
             else
@@ -1477,11 +1484,11 @@ function BANK:PresetSettingsSetCheckBox(option, state)
                 return false
             end
         elseif not state then
-            if BANK:PresetSettingsGetCheckBox("Equipment") then
+            if CheckBox then
                 print("[BANK] Disabling equipment checkbox.")
                 API.DoAction_Interface(0xffffffff,0xffffffff,1,517,298,-1,API.OFF_ACT_GeneralInterface_route)
                 return true
-            elseif not BANK:PresetSettingsGetCheckBox("Equipment") then
+            elseif not CheckBox then
                 print("[BANK] Equipment checkbox already disabled. No action needed.")
                 return true
             else
@@ -1494,12 +1501,13 @@ function BANK:PresetSettingsSetCheckBox(option, state)
         end
     
     elseif option == "Summon" then
+        local CheckBox = BANK:PresetSettingsGetCheckBox("Summon")
         if state then
-            if not BANK:PresetSettingsGetCheckBox("Summon") then
+            if not CheckBox then
                 print("[BANK] Enabling summon checkbox.")
                 API.DoAction_Interface(0xffffffff,0xffffffff,1,517,300,-1,API.OFF_ACT_GeneralInterface_route)
                 return true
-            elseif BANK:PresetSettingsGetCheckBox("Summon") then
+            elseif CheckBox then
                 print("[BANK] Summon checkbox already enabled. No action needed.")
                 return true
             else
@@ -1507,11 +1515,11 @@ function BANK:PresetSettingsSetCheckBox(option, state)
                 return false
             end
         elseif not state then
-            if BANK:PresetSettingsGetCheckBox("Summon") then
+            if CheckBox then
                 print("[BANK] Disabling summon checkbox.")
                 API.DoAction_Interface(0xffffffff,0xffffffff,1,517,300,-1,API.OFF_ACT_GeneralInterface_route)
                 return true
-            elseif not BANK:PresetSettingsGetCheckBox("Summon") then
+            elseif not CheckBox then
                 print("[BANK] Summon checkbox already disabled. No action needed.")
                 return true
             else
