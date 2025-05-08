@@ -1,23 +1,30 @@
 local ScriptName = "Quest toolbox"
 local Author = "Spectre011"
-local ScriptVersion = "1.0.0"
+local ScriptVersion = "1.1.0"
 local ReleaseDate = "03-05-2025"
 local DiscordHandle = "not_spectre011"
 
 --[[
 Changelog:
-v1.0 - 03-05-2025
+v1.0.0 - 03-05-2025
     - Initial release.
+v1.1.1 - 08-05-2025
+    - Added functions
+    - Changed . to :
 ]]
 
 local API = require("api")
 
 local QUEST = {}
 
+QUEST.Interfaces = {}
+
+QUEST.Interfaces.ChatOptions = { { 1188, 5, -1, -1}, { 1188, 3, -1, 5}, { 1188, 3, 14, 3} }
+
 -- Simple sleep
 ---@param seconds number
 ---@return boolean
-function QUEST.Sleep(seconds)
+function QUEST:Sleep(seconds)
     local endTime = os.clock() + seconds
     while API.Read_LoopyLoop() and os.clock() < endTime do
     end
@@ -26,8 +33,8 @@ end
 
 -- Is the option dialog box open
 ---@return boolean
-function QUEST.HasOption()
-    local option = API.ScanForInterfaceTest2Get(false, { { 1188, 5, -1, -1}, { 1188, 3, -1, 5}, { 1188, 3, 14, 3} })
+function QUEST:HasOption()
+    local option = API.ScanForInterfaceTest2Get(false, self.Interfaces.ChatOptions)
 
     if #option > 0 and #option[1].textids > 0 then
         return option[1].textids
@@ -47,7 +54,7 @@ local options = {
 ]]
 ---@param options table
 ---@return boolean
-function QUEST.OptionSelector(options)
+function QUEST:OptionSelector(options)
     for i, optionText in ipairs(options) do
         local optionNumber = tonumber(API.Dialog_Option(optionText))
         if optionNumber and optionNumber > 0 then
@@ -62,29 +69,29 @@ end
 
 -- Is a Dialogue Window open
 ---@return boolean
-function QUEST.DialogBoxOpen()
+function QUEST:DialogBoxOpen()
     return API.VB_FindPSett(2874, 1, 0).state == 12
 end
 
 -- Presses space bar with sleep added after
 ---@return boolean
-function QUEST.PressSpace()
+function QUEST:PressSpace()
     return API.KeyboardPress2(0x20, 40, 60), API.RandomSleep2(400,300,600)
 end
 
+-- Busy sleep that waits for a dialog box with a timeout in seconds
 ---@param timeout number
 ---@return boolean
-function QUEST.WaitForDialogBox(timeout)
+function QUEST:WaitForDialogBox(timeout)
     local startTime = os.clock()
-    while API.Read_LoopyLoop() and not QUEST.DialogBoxOpen() do
+    while API.Read_LoopyLoop() and not QUEST:DialogBoxOpen() do
         if os.clock() - startTime > timeout then
             return false
         end
-        QUEST.Sleep(0.6)
+        QUEST:Sleep(0.6)
     end
     return true
 end
-
 
 --Checks if the player is in a specified area
 ---@param x number
@@ -92,7 +99,7 @@ end
 ---@param z number
 ---@param radius number
 ---@return boolean
-function QUEST.IsPlayerInArea(x, y, z, radius)
+function QUEST:IsPlayerInArea(x, y, z, radius)
     local coord = API.PlayerCoord()
     local dx = math.abs(coord.x - x)
     local dy = math.abs(coord.y - y)
@@ -104,26 +111,26 @@ function QUEST.IsPlayerInArea(x, y, z, radius)
     end
 end
 
---Moves to a certain location within a specified distance tolerance
+-- Moves to a certain location within a specified distance tolerance
 ---@param x number
 ---@param y number
 ---@param z number
 ---@param Tolerance number
 ---@return boolean
-function QUEST.MoveTo(X, Y, Z, Tolerance)
-    while API.Read_LoopyLoop() and not QUEST.IsPlayerInArea(X, Y, Z, Tolerance + 2) do
+function QUEST:MoveTo(X, Y, Z, Tolerance)
+    while API.Read_LoopyLoop() and not QUEST:IsPlayerInArea(X, Y, Z, Tolerance + 2) do
         if not API.IsPlayerMoving_(API.GetLocalPlayerName()) then
             print("Not moving. Walking...")
             API.DoAction_WalkerW(WPOINT.new(X + math.random(-Tolerance, Tolerance),Y + math.random(-Tolerance, Tolerance),Z))
         end
-        QUEST.Sleep(0.6)
+        QUEST:Sleep(0.6)
     end
     return true
 end
 
 -- Wait until the object appears
 ---@return boolean
-function QUEST.WaitForObjectToAppear(ObjID, ObjType)    
+function QUEST:WaitForObjectToAppear(ObjID, ObjType)    
     local objects = API.GetAllObjArray1({ObjID}, 75, {ObjType})
     if objects and #objects > 0 then
         for _, object in ipairs(objects) do
@@ -136,7 +143,7 @@ function QUEST.WaitForObjectToAppear(ObjID, ObjType)
     else
         print("No objects found on this attempt.")
     end
-    QUEST.Sleep(0.6)
+    QUEST:Sleep(0.6)
     return true
 end
 
@@ -145,7 +152,7 @@ end
 ---@param Range number
 ---@param ObjType number
 ---@return boolean
-function QUEST.DoesObjectExist(ObjID, Range, ObjType)
+function QUEST:DoesObjectExist(ObjID, Range, ObjType)
     local objects = API.GetAllObjArray1({ObjID}, Range, {ObjType})
     if objects and #objects > 0 then
         for _, object in ipairs(objects) do
@@ -157,11 +164,10 @@ function QUEST.DoesObjectExist(ObjID, Range, ObjType)
     return false
 end
 
-
 -- Checks the bool1 field of a given object(12) is equal to 1
 ---@param ObjID number
 ---@return boolean
-function QUEST.Bool1Check(ObjID)
+function QUEST:Bool1Check(ObjID)
     local objects = API.GetAllObjArray1({ObjID}, 75, {12})
     if objects and #objects > 0 then
         for _, object in ipairs(objects) do
@@ -171,6 +177,12 @@ function QUEST.Bool1Check(ObjID)
         end
     end
     return false
+end
+
+-- Check if the player is in a cutscene(maybe)
+---@return boolean
+function QUEST:IsInCutscene()
+    return API.GetVarbitValue(16903) == 1
 end
 
 return QUEST
