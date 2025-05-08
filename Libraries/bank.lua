@@ -1,6 +1,6 @@
 local ScriptName = "Bank Toolbox"
 local Author = "Spectre011"
-local ScriptVersion = "1.0.5"
+local ScriptVersion = "1.0.6"
 local ReleaseDate = "02-05-2025"
 local DiscordHandle = "not_spectre011"
 
@@ -43,6 +43,12 @@ v1.0.5 - 06-05-2025
         Deposit box
         Collection box
         Preset settings
+v1.0.6 - 08-05-2025
+    Fixed VB read in BANK:GetOpenedTab()
+    Fixed VB read in BANK:GetQuantitySelected()
+    Fixed typos in BANK:WithdrawToBoB() and BANK:Withdraw()
+    Fixed typos for Head Guard in BANK:Open()
+    Added Head Guard to BANK:LoadLastPreset()
 ]]
 
 local API = require("api")
@@ -196,8 +202,8 @@ function BANK:Open()
         return true
     end
 
-    if Interact:Object("Head Guard", "Bank", 50) then
-        print("[BANK] Counter succeded.")
+    if Interact:NPC("Head Guard", "Bank", 50) then
+        print("[BANK] Head Guard succeded.")
         return true
     end
 
@@ -229,7 +235,12 @@ function BANK:LoadLastPreset()
         return true
     end
 
-    print("[BANK] Could not interact with any of the following: Banker, Bank chest, Bank booth and Counter.")
+    if Interact:NPC("Head Guard", "Load Last Preset from", 50) then
+        print("[BANK] Head Guard succeded.")
+        return true
+    end
+
+    print("[BANK] Could not interact with any of the following: Banker, Bank chest, Bank booth, Counter and Head Guard.")
     return false
 end
 
@@ -329,14 +340,14 @@ end
 -- Get the player tab opened in the bank(Inventory, Equipment or Beast of burden).
 ---@return number|boolean
 function BANK:GetOpenedTab()
-    local VB = API.VB_FindPSettinOrder(6680).state
-    if VB == 5120 then
+    local VB = API.VB_FindPSettinOrder(6680).state & 0x3
+    if VB == 0 then
         print("[BANK] Inventory tab is opened.")
         return 1
-    elseif VB == 5121 then
+    elseif VB == 1 then
         print("[BANK] Beast of burden tab is opened.")
         return 2
-    elseif VB == 5122 then
+    elseif VB == 2 then
         print("[BANK] Equipment tab is opened.")
         return 3
     else
@@ -459,22 +470,22 @@ end
 -- Retrieves the currently selected quantity option from the interface.
 ---@return number|string|boolean
 function BANK:GetQuantitySelected()
-    local VB = API.VB_FindPSettinOrder(8958).state
+    local VB = API.VB_FindPSettinOrder(8958).state & 0x7
 
-    if VB == 50 then
+    if VB == 2 then
         print("[BANK] Current quantity selected: 1")
         return 1
-    elseif VB == 51 then
+    elseif VB == 3 then
         print("[BANK] Current quantity selected: 5")
         return 5
-    elseif VB == 52 then
+    elseif VB == 4 then
         print("[BANK] Current quantity selected: 10")
         return 10
-    elseif VB == 53 then
+    elseif VB == 5 then
         local XValue = API.VB_FindPSettinOrder(111).state
         print("[BANK] Current quantity selected: X (Custom Value: " .. tostring(XValue) .. ")")
         return "X"
-    elseif VB == 55 then
+    elseif VB == 7 then
         print("[BANK] Current quantity selected: All")
         return "All"
     elseif VB == 0 then
@@ -906,7 +917,7 @@ function BANK:Withdraw(ItemID)
         end
         return success
     else
-        print("[BANK] Invalid input type for WithdrawItem. Expected number or table, got "..type(ItemID))
+        print("[BANK] Invalid input type for Withdraw. Expected number or table, got "..type(ItemID))
         return false
     end
 end
@@ -1033,7 +1044,7 @@ function BANK:WithdrawToBoB(ItemID)
         end
         return success
     else
-        print("[BANK] Invalid input type for WithdrawItem. Expected number or table, got "..type(ItemID))
+        print("[BANK] Invalid input type for WithdrawToBoB. Expected number or table, got "..type(ItemID))
         return false
     end
 end
