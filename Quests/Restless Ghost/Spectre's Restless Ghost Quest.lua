@@ -1,13 +1,15 @@
 ScriptName = "Restless Ghost Quest"
 Author = "Spectre011"
-ScriptVersion = "1.0.0"
-ReleaseDate = "05-03-2025"
+ScriptVersion = "1.0.1"
+ReleaseDate = "03-05-2025"
 DiscordHandle = "not_spectre011"
 
 --[[
 Changelog:
-v1.0.0 - 05-03-2025
+v1.0.0 - 03-05-2025
     - Initial release.
+v1.0.1 - 09-05-2025
+    - Fixed QUEST functions to use : instead of .
 ]]
 
 local API = require("api")
@@ -158,34 +160,34 @@ while (API.Read_LoopyLoop()) do
             print("Step 0/5")
             UpdateStatus("Step 0/5")
         
-            QUEST.MoveTo(3239, 3209, 0, 0)
+            QUEST:MoveTo(3239, 3209, 0, 0)
         
-            if not QUEST.Bool1Check(37002) then -- Closed door check
+            if not QUEST:Bool1Check(37002) then -- Closed door check
                 Interact:Object("Church door", "Open", 10)
             else
                 print("Church door is already open.")
             end
         
             Interact:NPC("Father Aereck", "Talk-to", 20)
-            QUEST.WaitForDialogBox(15)
+            QUEST:WaitForDialogBox(15)
         
-            while API.Read_LoopyLoop() and QUEST.DialogBoxOpen() do
-                if QUEST.HasOption() then
-                    QUEST.OptionSelector(DialogOptions)
+            while API.Read_LoopyLoop() and QUEST:DialogBoxOpen() do
+                if QUEST:HasOption() then
+                    QUEST:OptionSelector(DialogOptions)
                 else
-                    QUEST.PressSpace()
+                    QUEST:PressSpace()
                 end
             end
         
             API.DoAction_Interface(0x24, 0xffffffff, 1, 1500, 409, -1, API.OFF_ACT_GeneralInterface_route) --Accepting quest
         
-            QUEST.WaitForDialogBox(15)
+            QUEST:WaitForDialogBox(15)
 
-            while API.Read_LoopyLoop() and QUEST.DialogBoxOpen() do
-                if QUEST.HasOption() then
-                    QUEST.OptionSelector(DialogOptions)
+            while API.Read_LoopyLoop() and QUEST:DialogBoxOpen() do
+                if QUEST:HasOption() then
+                    QUEST:OptionSelector(DialogOptions)
                 else
-                    QUEST.PressSpace()
+                    QUEST:PressSpace()
                 end
             end  
 
@@ -193,15 +195,15 @@ while (API.Read_LoopyLoop()) do
             print("Step 1/5")
             UpdateStatus("Step 1/5")
 
-            QUEST.MoveTo(3240, 3209, 0, 0)
-            if not QUEST.Bool1Check(37002) then -- Closed door check
+            QUEST:MoveTo(3240, 3209, 0, 0)
+            if not QUEST:Bool1Check(37002) then -- Closed door check
                 Interact:Object("Church door", "Open", 10)
             else
                 print("Church door is already open.")
             end
 
-            QUEST.MoveTo(3207, 3152, 0, 0)
-            if not QUEST.Bool1Check(45539) then -- Closed door check
+            QUEST:MoveTo(3207, 3152, 0, 0)
+            if not QUEST:Bool1Check(45539) then -- Closed door check
                 Interact:Object("Door", "Open", 10)
             else
                 print("House door is already open.")
@@ -209,13 +211,13 @@ while (API.Read_LoopyLoop()) do
 
             Interact:NPC("Father Urhney", "Talk-to", 20)
         
-            QUEST.WaitForDialogBox(15)
+            QUEST:WaitForDialogBox(15)
 
-            while API.Read_LoopyLoop() and QUEST.DialogBoxOpen() do
-                if QUEST.HasOption() then
-                    QUEST.OptionSelector(DialogOptions)
+            while API.Read_LoopyLoop() and QUEST:DialogBoxOpen() do
+                if QUEST:HasOption() then
+                    QUEST:OptionSelector(DialogOptions)
                 else
-                    QUEST.PressSpace()
+                    QUEST:PressSpace()
                 end
             end
 
@@ -223,8 +225,8 @@ while (API.Read_LoopyLoop()) do
             print("Step 2/5")
             UpdateStatus("Step 2/5")
 
-            QUEST.MoveTo(3207, 3151, 0, 0)
-            if not QUEST.Bool1Check(45539) then -- Closed door check
+            QUEST:MoveTo(3207, 3151, 0, 0)
+            if not QUEST:Bool1Check(45539) then -- Closed door check
                 Interact:Object("Door", "Open", 10)
             else
                 print("House door is already open.")
@@ -232,22 +234,22 @@ while (API.Read_LoopyLoop()) do
 
             Inventory:Equip(552)
             
-            QUEST.MoveTo(3248, 3193, 0, 1)
-            if not QUEST.Bool1Check(89481) then -- Closed coffin check
+            QUEST:MoveTo(3248, 3193, 0, 1)
+            if not QUEST:Bool1Check(89481) then -- Closed coffin check
                 Interact:Object("Coffin", "Open", 10)
-                QUEST.Sleep(5)
+                QUEST:Sleep(5)
             else
                 print("Coffin is already open.")
             end
 
             Interact:NPC("Restless ghost", "Talk-to", 10)
-            QUEST.WaitForDialogBox(15)
+            QUEST:WaitForDialogBox(15)
 
-            while API.Read_LoopyLoop() and QUEST.DialogBoxOpen() do
-                if QUEST.HasOption() then
-                    QUEST.OptionSelector(DialogOptions)
+            while API.Read_LoopyLoop() and QUEST:DialogBoxOpen() do
+                if QUEST:HasOption() then
+                    QUEST:OptionSelector(DialogOptions)
                 else
-                    QUEST.PressSpace()
+                    QUEST:PressSpace()
                 end
             end
 
@@ -255,17 +257,17 @@ while (API.Read_LoopyLoop()) do
             print("Step 3/5")
             UpdateStatus("Step 3/5")
 
-            QUEST.MoveTo(3237, 3147, 0, 1)
+            QUEST:MoveTo(3237, 3147, 0, 1)
 
             --Interact:Object("Rocks", "Search", 20) Is Bugged
             API.DoAction_Object1(0x38,API.OFF_ACT_GeneralObject_route0,{47714},50) --Use untill Interact if fixed
-            QUEST.WaitForDialogBox(15)
+            QUEST:WaitForDialogBox(15)
 
-            while API.Read_LoopyLoop() and QUEST.DialogBoxOpen() do
-                if QUEST.HasOption() then
-                    QUEST.OptionSelector(DialogOptions)
+            while API.Read_LoopyLoop() and QUEST:DialogBoxOpen() do
+                if QUEST:HasOption() then
+                    QUEST:OptionSelector(DialogOptions)
                 else
-                    QUEST.PressSpace()
+                    QUEST:PressSpace()
                 end
             end
 
@@ -273,56 +275,56 @@ while (API.Read_LoopyLoop()) do
             print("Step 4/5")
             UpdateStatus("Step 4/5")
 
-            QUEST.MoveTo(3248, 3193, 0, 1)
-            if not QUEST.Bool1Check(89481) then -- Closed coffin check
+            QUEST:MoveTo(3248, 3193, 0, 1)
+            if not QUEST:Bool1Check(89481) then -- Closed coffin check
                 Interact:Object("Coffin", "Open", 10)
-                QUEST.Sleep(5)
+                QUEST:Sleep(5)
             else
                 print("Coffin is already open.")
             end
 
             Interact:NPC("Restless ghost", "Talk-to", 10)
-            QUEST.WaitForDialogBox(15)
+            QUEST:WaitForDialogBox(15)
 
-            while API.Read_LoopyLoop() and QUEST.DialogBoxOpen() do
-                if QUEST.HasOption() then
-                    QUEST.OptionSelector(DialogOptions)
+            while API.Read_LoopyLoop() and QUEST:DialogBoxOpen() do
+                if QUEST:HasOption() then
+                    QUEST:OptionSelector(DialogOptions)
                 else
-                    QUEST.PressSpace()
+                    QUEST:PressSpace()
                 end
             end
 
             Interact:Object("Coffin", "Search", 10)
-            QUEST.WaitForDialogBox(15)
+            QUEST:WaitForDialogBox(15)
 
-            while API.Read_LoopyLoop() and QUEST.DialogBoxOpen() do
-                if QUEST.HasOption() then
-                    QUEST.OptionSelector(DialogOptions)
+            while API.Read_LoopyLoop() and QUEST:DialogBoxOpen() do
+                if QUEST:HasOption() then
+                    QUEST:OptionSelector(DialogOptions)
                 else
-                    QUEST.PressSpace()
+                    QUEST:PressSpace()
                 end
             end
-            QUEST.Sleep(5)
+            QUEST:Sleep(5)
 
-            QUEST.WaitForDialogBox(15)
+            QUEST:WaitForDialogBox(15)
 
-            while API.Read_LoopyLoop() and QUEST.DialogBoxOpen() do
-                if QUEST.HasOption() then
-                    QUEST.OptionSelector(DialogOptions)
+            while API.Read_LoopyLoop() and QUEST:DialogBoxOpen() do
+                if QUEST:HasOption() then
+                    QUEST:OptionSelector(DialogOptions)
                 else
-                    QUEST.PressSpace()
+                    QUEST:PressSpace()
                 end
             end
 
-            QUEST.Sleep(5)
+            QUEST:Sleep(5)
 
-            QUEST.WaitForDialogBox(15)
+            QUEST:WaitForDialogBox(15)
 
-            while API.Read_LoopyLoop() and QUEST.DialogBoxOpen() do
-                if QUEST.HasOption() then
-                    QUEST.OptionSelector(DialogOptions)
+            while API.Read_LoopyLoop() and QUEST:DialogBoxOpen() do
+                if QUEST:HasOption() then
+                    QUEST:OptionSelector(DialogOptions)
                 else
-                    QUEST.PressSpace()
+                    QUEST:PressSpace()
                 end
             end
 
@@ -340,7 +342,7 @@ while (API.Read_LoopyLoop()) do
 
     end
     
-    QUEST.Sleep(0.3)
+    QUEST:Sleep(0.3)
 end
 
 API.Write_LoopyLoop(false)
